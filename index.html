@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>RunKit | In-Browser JavaScript Playground</title>
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="libs/codemirror/5.62.0/codemirror.min.css">
+    <link rel="stylesheet" href="src/Styles.css">
+</head>
+
+<body>
+    <div class="container">
+        <div class="header"><span><img src="favicon.ico">RunKit | In-Browser JavaScript Playground</span><span>
+                <input type="file" name="FileInput" class="ImportLibrary" accept=".js"><button onclick="executeCode()"
+                    class="btn run-btn">Run&nbsp;▶</button><button onclick="clearConsole()"
+                    class="btn clear-btn">Clear</button>
+            </span></div>
+        <div class="row">
+            <div class="column playground"><textarea id="code" name="code"></textarea></div>
+            <div class="column playground-console">
+                <div id="console"></div>
+            </div>
+        </div>
+    </div>
+    <script src="libs/codemirror/5.62.0/codemirror.min.js"></script>
+    <script src="libs/codemirror/5.62.0/mode/javascript/javascript.min.js"></script>
+    <script src="src/App.js"></script>
+</body>
+
+</html>
