@@ -102,6 +102,7 @@ const charset = 'utf-8';
 // Function to create a hidden link
 function createHiddenLink(codeToSave) {
     const hiddenLink = document.createElement('a');
+    hiddenLink.style.display = 'none';
     hiddenLink.href = `data:${mimeType};charset=${charset},${encodeURIComponent(codeToSave)}`;
     hiddenLink.target = '_blank';
     hiddenLink.download = fileName;
@@ -128,3 +129,10 @@ function handleKeydown(event) {
 
 // Add event listener
 document.addEventListener('keydown', handleKeydown, { capture: false, passive: false });
+
+function displayConsole(typeExecute) {
+    var playground = document.getElementsByClassName('playground')[0];
+    var console = document.getElementsByClassName('playground-console')[0];
+    var displayConsole = window.getComputedStyle(console).display;
+    displayConsole = !typeExecute ? (displayConsole === 'none' ? (console.style.display = 'block', playground.style.width = 'calc(50vw - 22.5px)') : (console.style.display = 'none', playground.style.width = 'calc(100vw - 30px)')) : (displayConsole = console.style.display = 'block', playground.style.width = 'calc(50vw - 22.5px)');
+}

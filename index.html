@@ -13,11 +13,12 @@
 <body>
     <div class="container">
         <div class="header"><span><img src="favicon.ico">RunKit | In-Browser JavaScript Playground</span><span>
-                <input type="file" name="FileInput" class="ImportLibrary" accept=".js"><button onclick="executeCode()"
+                <input type="file" name="FileInput" accept=".js"><button onclick="displayConsole(true);executeCode()"
                     class="btn run-btn">Run&nbsp;▶</button><button onclick="clearConsole()"
                     class="btn clear-btn">Clear</button>
             </span></div>
         <div class="row">
+            <button class="btn clear-btn display-btn" onclick="displayConsole()">Show/Hide</button>
             <div class="column playground"><textarea id="code" name="code"></textarea></div>
             <div class="column playground-console">
                 <div id="console"></div>
