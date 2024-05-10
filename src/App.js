@@ -93,3 +93,38 @@ document.addEventListener('keydown', function (event) {
         executeCode();
     }
 });
+
+// Constants
+const fileName = 'script.js';
+const mimeType = 'application/javascript';
+const charset = 'utf-8';
+
+// Function to create a hidden link
+function createHiddenLink(codeToSave) {
+    const hiddenLink = document.createElement('a');
+    hiddenLink.href = `data:${mimeType};charset=${charset},${encodeURIComponent(codeToSave)}`;
+    hiddenLink.target = '_blank';
+    hiddenLink.download = fileName;
+    return hiddenLink;
+}
+
+// Function to trigger the download
+function triggerDownload(hiddenLink) {
+    document.body.appendChild(hiddenLink);
+    hiddenLink.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
+    hiddenLink.remove(); // Remove the link immediately after click
+}
+
+// Function to handle the keydown event
+function handleKeydown(event) {
+    if (event.ctrlKey && event.key === 's') {
+        event.preventDefault();
+        event.stopPropagation();
+        const codeToSave = editor.getValue();
+        const hiddenLink = createHiddenLink(codeToSave);
+        setTimeout(() => triggerDownload(hiddenLink), 10); // Add the following line to wrap the triggerDownload function in a setTimeout
+    }
+}
+
+// Add event listener
+document.addEventListener('keydown', handleKeydown, { capture: false, passive: false });

@@ -196,12 +196,6 @@ textarea {
     resize: none
 }
 
-code {
-    font-size: 87.5%;
-    color: #e83e8c;
-    word-wrap: break-word
-}
-
 .container {
     width: 100%;
     height: 100%;
