@@ -46,18 +46,19 @@ function executeCode() {
 
 const fileInput = document.querySelector('input[type="file"]');
 
-function getFile() {
-    fileInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        fileToPlainText(file)
-            .then(PlainText => {
-                importedLibrary = PlainText;
-                logToConsole('File Imported Successfully', 'msg');
-            });
-    });
-};
-
-getFile();
+(function () {
+    function getFile() {
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            fileToPlainText(file)
+                .then(PlainText => {
+                    importedLibrary = PlainText;
+                    logToConsole('File Imported Successfully', 'msg');
+                });
+        });
+    };
+    getFile();
+})();
 
 function fileToPlainText(file) {
     return new Promise((resolve, reject) => {
