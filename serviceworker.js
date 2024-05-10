@@ -10,8 +10,8 @@ const RUNTIME = 'Dynamic_Cache v1.0.2-ProductionBuild';
 // A list of local resources we always want to be cached.
 const PRECACHE_URLS = [
     '/',
-    'src/App.js',
     'index.html',
+    'src/App.js',
     'favicon.ico',
     'src/Styles.css',
     'src/Executor.js',
