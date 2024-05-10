@@ -115,8 +115,16 @@ body {
     background-color: rgba(0, 0, 0, 0.1);
 }
 
+.log {
+    color: #31ad31;
+}
+
 .error {
     color: #dc3545;
+}
+
+.msg {
+    color: #007bff;
 }
 
 #code {
@@ -156,16 +164,6 @@ pre.CodeMirror-line {
     z-index: 9999;
 }
 
-.btn {
-    position: relative;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-}
-
-code {
-    font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-    font-size: 1em
-}
-
 button {
     border-radius: 0
 }
@@ -188,23 +186,14 @@ button {
     text-transform: none
 }
 
-button:not(:disabled) {
-    cursor: pointer
-}
-
-button::-moz-focus-inner {
-    padding: 0;
-    border-style: none
+::-webkit-file-upload-button {
+    font: inherit;
+    -webkit-appearance: button
 }
 
 textarea {
     overflow: auto;
-    resize: vertical
-}
-
-::-webkit-file-upload-button {
-    font: inherit;
-    -webkit-appearance: button
+    resize: none
 }
 
 code {
@@ -237,10 +226,6 @@ code {
     width: 100%;
     height: calc(100vh - 89px) !important;
     width: calc(50% - 7.5px);
-}
-
-textarea.form-control {
-    height: auto
 }
 
 label {
@@ -300,12 +285,13 @@ input {
     transition: color .15s ease-in-out, background-color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out
 }
 
-.ImportLibrary:hover:not(:disabled):not([readonly])::-webkit-file-upload-button,
-.ImportLibrary:hover:not(:disabled):not([readonly])::file-selector-button {
+.ImportLibrary:hover::-webkit-file-upload-button,
+.ImportLibrary:hover::file-selector-button {
     background-color: #e9ecef
 }
 
 .btn {
+    cursor: pointer;
     display: inline-block;
     font-weight: 400;
     color: #212529;
@@ -321,7 +307,9 @@ input {
     font-size: 1rem;
     line-height: 1.5;
     border-radius: .25rem;
-    transition: color .15s ease-in-out, background-color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out
+    transition: color .15s ease-in-out, background-color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+    position: relative;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
 
 @media (prefers-reduced-motion:reduce) {
@@ -338,14 +326,6 @@ input {
 .btn:focus {
     outline: 0;
     box-shadow: 0 0 0 .2rem rgba(0, 123, 255, .25)
-}
-
-.btn:disabled {
-    opacity: .65
-}
-
-.btn:not(:disabled):not(.disabled) {
-    cursor: pointer
 }
 
 .run-btn {
@@ -367,19 +347,13 @@ input {
     box-shadow: 0 0 0 .2rem rgba(38, 143, 255, .5)
 }
 
-.run-btn:disabled {
-    color: #fff;
-    background-color: #007bff;
-    border-color: #007bff
-}
-
-.run-btn:not(:disabled):not(.disabled):active {
+.run-btn:active {
     color: #fff;
     background-color: #0062cc;
     border-color: #005cbf
 }
 
-.run-btn:not(:disabled):not(.disabled):active:focus {
+.run-btn:active:focus {
     box-shadow: 0 0 0 .2rem rgba(38, 143, 255, .5)
 }
 
@@ -402,18 +376,12 @@ input {
     box-shadow: 0 0 0 .2rem rgba(130, 138, 145, .5)
 }
 
-.clear-btn:disabled {
-    color: #fff;
-    background-color: #6c757d;
-    border-color: #6c757d
-}
-
-.clear-btn:not(:disabled):not(.disabled):active {
+.clear-btn:active {
     color: #fff;
     background-color: #545b62;
     border-color: #4e555b
 }
 
-.clear-btn:not(:disabled):not(.disabled):active:focus {
+.clear-btn:active:focus {
     box-shadow: 0 0 0 .2rem rgba(130, 138, 145, .5)
 }

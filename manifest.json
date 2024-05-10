@@ -1,0 +1,32 @@
+{
+    "name": "RunKit",
+    "description": "RunKit is a JavaScript playground which allows you to run and test your code natively in your browser.",
+    "lang": "en",
+    "dir": "ltr",
+    "short_name": "RunKit",
+    "start_url": "/",
+    "scope": "/",
+    "display": "standalone",
+    "orientation": "any",
+    "theme_color": "#212529",
+    "background_color": "#212529",
+    "prefer_related_applications": false,
+    "display_override": [
+        "window-controls-overlay",
+        "standalone"
+    ],
+    "icons": [
+        {
+            "src": "/assets/icons/icon.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/assets/icons/maskable.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}

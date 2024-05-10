@@ -3,7 +3,8 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>RunKit | In-Browser JavaScript Playground</title>
+    <link rel="manifest" href="manifest.json">
+    <title>RunKit</title>
     <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="libs/codemirror/5.62.0/codemirror.min.css">
     <link rel="stylesheet" href="src/Styles.css">
@@ -26,6 +27,19 @@
     <script src="libs/codemirror/5.62.0/codemirror.min.js"></script>
     <script src="libs/codemirror/5.62.0/mode/javascript/javascript.min.js"></script>
     <script src="src/App.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('serviceworker.js').then(function (registration) {
+                    // Registration was successful
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                }, function (err) {
+                    // registration failed :(
+                    console.log('ServiceWorker registration failed: ', err);
+                });
+            });
+        }
+    </script>
 </body>
 
 </html>
