@@ -12,6 +12,14 @@
 </head>
 
 <body>
+    <div id="splash-screen">
+        <div class="screen">
+            <div class="loaderImg">
+                <img src="favicon.ico" alt="" height="256px" width="256px">
+            </div>
+            <span class="loader"></span>
+        </div>
+    </div>
     <div class="container">
         <div class="header">
             <span><img src="favicon.ico">
@@ -29,6 +37,35 @@
                 <button class="button secondary-button display-button" onclick="displayConsole()">Console</button>
             </div>
             <div class="column playground">
+                <div class="hide" id="contextMenu">
+                    <ul>
+                        <li>
+                            <button class="button secondary-button"
+                                style="width: -webkit-fill-available;margin: 2.5px 0;" id="selectAllButton">Select
+                                All</button>
+                        </li>
+                        <li>
+                            <button class="button secondary-button"
+                                style="width: -webkit-fill-available;margin: 2.5px 0;" onclick="executeCode()">Run
+                                Code</button>
+                        </li>
+                        <li>
+                            <button class="button secondary-button"
+                                style="width: -webkit-fill-available;margin: 2.5px 0;" onclick="saveCodeToFile()">Save
+                                As</button>
+                        <li>
+                            <button class="button secondary-button"
+                                style="width: -webkit-fill-available;margin: 2.5px 0;"
+                                onclick="autoFormatSelection('FullRange')">Format
+                                Document</button>
+                        </li>
+                        <li>
+                            <button class="button secondary-button"
+                                style="width: -webkit-fill-available;margin: 2.5px 0;"
+                                onclick="autoFormatSelection()">Format
+                                Selection</button>
+                    </ul>
+                </div>
                 <textarea id="code" name="code"></textarea>
             </div>
             <div class="column playground-console">
@@ -36,11 +73,23 @@
             </div>
         </div>
     </div>
+    <script>
+        // document.addEventListener('DOMContentLoaded', function () {
+        setTimeout(function () {
+            document.querySelector('#splash-screen').remove();
+            document.querySelector('.container').style.visibility = 'visible';
+        }, 3000);
+        // });
+        document.addEventListener('contextmenu', function (e) {
+            e.preventDefault();
+        });
+    </script>
     <script src="libs/codemirror/5.62.0/codemirror.min.js"></script>
     <script src="libs/codemirror/5.62.0/mode/javascript/javascript.min.js"></script>
     <script src="libs/codemirror/5.62.0/addon/closebrackets.min.js"></script>
     <script src="libs/codemirror/5.62.0/addon/hint/show-hint.min.js"></script>
     <script src="libs/codemirror/5.62.0/addon/hint/javascript-hint.min.js"></script>
+    <script src="libs/codemirror/5.62.0/util/formatting.js"></script>
     <script src="src/App.js"></script>
     <script>
         if ('serviceWorker' in navigator) {

@@ -28,7 +28,7 @@ html {
     display: block;
     background: #495670;
     background-clip: padding-box;
-    border-width: 20px 7px 20px 7px;
+    border-width: 0px 7px 0px 7px;
     border-style: solid;
     border-color: transparent;
 }
@@ -50,6 +50,67 @@ body {
     overflow: overlay;
 }
 
+#splash-screen {
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+    display: flex;
+    position: fixed;
+    justify-content: center;
+    background: #fff;
+    align-items: center;
+    animation: appear 0.375s ease-in-out forwards;
+}
+
+#splash-screen .screen {
+    width: 256px;
+    height: 256px;
+    user-select: none;
+}
+
+.loaderImg {
+    margin-bottom: 100px;
+    border-radius: 25%;
+    box-shadow: 0 0 2.5vw #db0000;
+    height: 256px;
+    width: 256px;
+    background: #000;
+}
+
+.loaderImg img {
+    border-radius: 0px;
+}
+
+.loader {
+    display: block;
+    position: relative;
+    height: 5px;
+    width: 90%;
+    margin: 0 auto;
+    background: #ffffff50;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 0 2.5vw #db0000;
+}
+
+.loader:after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 0;
+    background: #000034;
+    border-radius: 10px;
+    animation: 3s prog ease-in-out 1;
+}
+
+@keyframes prog {
+    to {
+        width: 100%;
+    }
+}
+
 .container,
 .row {
     width: 100%;
@@ -59,6 +120,7 @@ body {
 
 .container {
     position: fixed;
+    visibility: hidden;
 }
 
 .row {
@@ -70,6 +132,35 @@ body {
     border: 1px solid #dee2e6;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     border-radius: 10px;
+}
+
+.show {
+    z-index: 1000;
+    position: absolute;
+    padding: 7.5px;
+    display: block;
+    margin: 0;
+    list-style-type: none;
+    list-style: none;
+    border: 1px solid #6c757d;
+    border-radius: 10px;
+}
+
+.hide {
+    display: none;
+}
+
+.show li {
+    list-style: none;
+}
+
+.show a {
+    border: 0 !important;
+    text-decoration: none;
+}
+
+.show a:hover {
+    text-decoration: underline !important;
 }
 
 .playground-console {
@@ -424,7 +515,8 @@ input[type=file]:hover::file-selector-button {
 }
 
 .display-button,
-.clear-button {
+.clear-button,
+.download-button {
     height: min-content;
     position: absolute;
     z-index: 999;

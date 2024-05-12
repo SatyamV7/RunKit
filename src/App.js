@@ -19,7 +19,7 @@ var editor = CodeMirror.fromTextArea(document.getElementById('code'), {
     lineWrapping: true,
     indentUnit: 4,
     autoCloseBrackets: true,
-    extraKeys: { "Ctrl-Space": "autocomplete" }, // Trigger autocomplete with Ctrl-Space
+    extraKeys: { 'Ctrl-Space': 'autocomplete' }, // Trigger autocomplete with Ctrl-Space
     hintOptions: {
         completeSingle: false, // Show hints on every keystroke
         async: true // Enable asynchronous hint fetching
@@ -116,6 +116,45 @@ function clearConsole() {
     consoleDiv.innerHTML = '';
 };
 
+// Function to show/hide the console
+function displayConsole(typeExecute) {
+    var playground = document.getElementsByClassName('playground')[0];
+    var console = document.getElementsByClassName('playground-console')[0];
+    var clearButton = document.getElementsByClassName('clear-button')[0]; // Assuming you have a clearButton
+    var displayConsole = window.getComputedStyle(console).display;
+    if (typeExecute) {
+        displayConsole = console.style.display = 'block';
+        clearButton.style.display = 'block';
+        playground.style.width = 'calc(50vw - 22.5px)';
+        localStorage.setItem('consoleState', 'block');
+    } else {
+        if (displayConsole === 'none') {
+            console.style.display = 'block';
+            clearButton.style.display = 'block';
+            playground.style.width = 'calc(50vw - 22.5px)';
+            localStorage.setItem('consoleState', 'block');
+        } else {
+            console.style.display = 'none';
+            clearButton.style.display = 'none';
+            playground.style.width = 'calc(100vw - 30px)';
+            localStorage.setItem('consoleState', 'none');
+        }
+    }
+}
+
+// Call this function on page load to set the console state
+window.onload = function () {
+    var consoleState = localStorage.getItem('consoleState');
+    if (consoleState) {
+        var playground = document.getElementsByClassName('playground')[0];
+        var console = document.getElementsByClassName('playground-console')[0];
+        var clearButton = document.getElementsByClassName('clear-button')[0]; // Assuming you have a clearButton
+        console.style.display = consoleState;
+        clearButton.style.display = consoleState;
+        playground.style.width = consoleState === 'none' ? 'calc(100vw - 30px)' : 'calc(50vw - 22.5px)';
+    }
+};
+
 // IIFE to import library
 (function () {
     function importLibrary() {
@@ -201,24 +240,69 @@ function triggerDownload(hiddenLink) {
     hiddenLink.remove(); // Remove the link immediately after click
 }
 
+function saveCodeToFile() {
+    const codeToSave = editor.getValue();
+    const hiddenLink = createHiddenLink(codeToSave);
+    setTimeout(() => triggerDownload(hiddenLink), 10);
+}
+
 // Function to handle the keydown event
 function handleKeydown(event) {
     if (event.ctrlKey && event.key === 's') {
         event.preventDefault();
         event.stopPropagation();
-        const codeToSave = editor.getValue();
-        const hiddenLink = createHiddenLink(codeToSave);
-        setTimeout(() => triggerDownload(hiddenLink), 10); // Add the following line to wrap the triggerDownload function in a setTimeout
+        saveCodeToFile();
     }
 }
 
 // Add event listener
 document.addEventListener('keydown', handleKeydown, { capture: false, passive: false });
 
-// Function to show/hide the console
-function displayConsole(typeExecute) {
-    var playground = document.getElementsByClassName('playground')[0];
-    var console = document.getElementsByClassName('playground-console')[0];
-    var displayConsole = window.getComputedStyle(console).display;
-    displayConsole = !typeExecute ? (displayConsole === 'none' ? (console.style.display = 'block', clearButton.style.display = 'block', playground.style.width = 'calc(50vw - 22.5px)') : (console.style.display = 'none', clearButton.style.display = 'none', playground.style.width = 'calc(100vw - 30px)')) : (displayConsole = console.style.display = 'block', clearButton.style.display = 'block', playground.style.width = 'calc(50vw - 22.5px)');
+// Context Menu
+document.addEventListener('DOMContentLoaded', function () {
+    var codeMirrorElements = document.getElementsByClassName('CodeMirror');
+    for (var i = 0; i < codeMirrorElements.length; i++) {
+        codeMirrorElements[i].addEventListener('contextmenu', function (e) {
+            e.preventDefault();
+            var contextMenu = document.getElementById('contextMenu');
+            contextMenu.style.top = e.clientY + 'px';
+            contextMenu.style.left = e.clientX + 'px';
+            contextMenu.className = 'show';
+        }, false);
+    }
+});
+
+document.addEventListener('click', function (event) {
+    document.getElementById('contextMenu').className = 'hide';
+});
+
+function selectAllCode() {
+    var docLength = editor.lineCount();
+    var start = { line: 0, ch: 0 };
+    var end = { line: docLength - 1, ch: editor.getLine(docLength - 1).length };
+    editor.setSelection(start, end);
+}
+
+document.getElementById("selectAllButton").addEventListener("click", selectAllCode);
+
+function getFullRange() {
+    var doc = editor.getDoc();
+    var start = { line: doc.firstLine(), ch: 0 };
+    var end = { line: doc.lastLine(), ch: editor.getLine(doc.lastLine()).length };
+    return { from: start, to: end };
+}
+
+function getSelectedRange() {
+    return { from: editor.getCursor(true), to: editor.getCursor(false) };
+}
+
+function autoFormatSelection(Range) {
+    if (Range === 'FullRange') {
+        var range = getFullRange();
+        editor.autoFormatRange(range.from, range.to);
+    }
+    else {
+        var range = getSelectedRange();
+        editor.autoFormatRange(range.from, range.to);
+    }
 }
