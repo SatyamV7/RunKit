@@ -1,5 +1,13 @@
-var isExecuting = false; // Flag to track code execution status
+let Executor; // Variable to store the Web Worker
 var importedLibrary; // Variable to store imported library code
+var isExecuting = false; // Variable to store the execution status
+
+// UI Elements
+var runButton = document.querySelector('button.button.primary-button.run-button');
+var stopButton = document.querySelector('button.button.primary-button.stop-button');
+var clearButton = document.querySelector('button.button.clear-button');
+const fileInput = document.querySelector('input[type="file"]');
+const consoleDiv = document.getElementById('console');
 
 // Initialize CodeMirror
 var editor = CodeMirror.fromTextArea(document.getElementById('code'), {
@@ -8,69 +16,67 @@ var editor = CodeMirror.fromTextArea(document.getElementById('code'), {
     autofocus: true,
     autoComplete: true,
     smartIndent: true,
-    lineWrapping: true
+    lineWrapping: true,
+    indentUnit: 4,
 });
-
-editor.setValue('// Write your code here\nconsole.log("Hello, World!");\n');
 
 // Function to execute the code in the editor
 function executeCode() {
-    if (isExecuting) {
-        logToConsole('Code execution is already in progress. Please wait...', 'log');
-        return;
-    }
     if (importedLibrary !== undefined) {
         var code = importedLibrary + '\n' + editor.getValue(); // Get code from Imported File & CodeMirror editor
     }
     else {
         var code = editor.getValue(); // Get code from Imported File & CodeMirror editor
     }
-    isExecuting = true; // Set isExecuting to true when code execution starts
-
     clearConsole();
+    isExecuting = true;
+    runButton.disabled = true;
+    stopButton.disabled = false;
     // Create a new Web Worker
-    const worker = new Worker('./src/Executor.js');
+    Executor = new Worker('/src/Executor.js');
     // Set up a message handler to receive the results
-    worker.onmessage = function (event) {
-        const { type, message } = event.data;
+    Executor.onmessage = function (event) {
+        const { type, message, executionStatus } = event.data;
         logToConsole(message, type);
-        isExecuting = false; // Set isExecuting to false after receiving the message
+        // If the worker has started executing the code, disable the runButton
+        if (executionStatus === 'executionStarted') {
+            isExecuting = true;
+            runButton.disabled = true;
+            stopButton.disabled = false;
+        }
+        // If the worker has finished executing the code, enable the runButton
+        if (executionStatus === 'executionEnded') {
+            isExecuting = false;
+            runButton.disabled = false;
+            stopButton.disabled = true;
+        }
     };
-    // Send the code to the worker for execution
-    worker.postMessage(code);
-    worker.onerror = function (error) {
+    // Send the code to the Executor for execution
+    Executor.postMessage(code);
+    Executor.onerror = function (error) {
         logToConsole('Worker Error: ' + error.message, 'error');
-        isExecuting = false; // Set isExecuting to false also on error
+        isExecuting = false;
+        runButton.disabled = false;
+        stopButton.disabled = true;
     };
 };
 
-const fileInput = document.querySelector('input[type="file"]');
+runButton.addEventListener('click', executeCode);
 
-(function () {
-    function getFile() {
-        fileInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            fileToPlainText(file)
-                .then(PlainText => {
-                    importedLibrary = PlainText;
-                    logToConsole('File Imported Successfully', 'msg');
-                });
-        });
-    };
-    getFile();
-})();
+stopButton.disabled = true; // Disable the stop button by default
 
-function fileToPlainText(file) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            const plainText = reader.result;
-            resolve(plainText);
-        };
-        reader.onerror = reject;
-        reader.readAsText(file);
-    });
+// Function to stop the code execution
+function stopExecution() {
+    if (Executor !== undefined) {
+        isExecuting = false;
+        Executor.terminate(); // Terminate the Executor and log a message to the console
+        runButton.disabled = false;
+        stopButton.disabled = true;
+        logToConsole('Code execution stopped by the user', 'error');
+    }
 };
+
+stopButton.addEventListener('click', stopExecution);
 
 // Function to add messages to the console
 function logToConsole(message, type) {
@@ -84,19 +90,75 @@ function logToConsole(message, type) {
 
 // Function to clear all console messages
 function clearConsole() {
-    const consoleDiv = document.getElementById('console');
     consoleDiv.innerHTML = '';
 };
 
+// IIFE to import library
+(function () {
+    function importLibrary() {
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            fileToPlainText(file)
+                .then(PlainText => {
+                    importedLibrary = PlainText;
+                    logToConsole('File Imported Successfully', 'msg');
+                });
+        });
+    };
+    importLibrary();
+})();
+
+// Helper function to convert a file to plain text
+function fileToPlainText(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            const plainText = reader.result;
+            resolve(plainText);
+        };
+        reader.onerror = reject;
+        reader.readAsText(file);
+    });
+};
+
 // Function to handle keyboard shortcuts
+
+// Execute code on pressing Ctrl + Enter
 document.addEventListener('keydown', function (event) {
     if (event.ctrlKey && event.key === 'Enter') {
         executeCode();
     }
 });
 
+// Stop execution on pressing Ctrl + Escape
+document.addEventListener('keydown', function (event) {
+    if (event.ctrlKey && event.key === 'Escape') {
+        stopExecution();
+    }
+});
+
+// Save the code in the editor to a localstorage upon detecting a change in the editor
+editor.on('change', function () {
+    localStorage.setItem('code', editor.getValue());
+});
+
+// Load the code from the localstorage
+function loadCode() {
+    var localStorageCode = localStorage.getItem('code');
+    if (localStorageCode !== null && localStorageCode !== '') {
+        editor.setValue(localStorageCode);
+    }
+    else {
+        editor.setValue('// Write your JavaScript code here\n');
+    }
+};
+
+document.addEventListener('DOMContentLoaded', loadCode);
+
+// Save the code in the editor to a file
+
 // Constants
-const fileName = 'script.js';
+const fileName = 'Script.js';
 const mimeType = 'application/javascript';
 const charset = 'utf-8';
 
@@ -105,7 +167,6 @@ function createHiddenLink(codeToSave) {
     const hiddenLink = document.createElement('a');
     hiddenLink.style.display = 'none';
     hiddenLink.href = `data:${mimeType};charset=${charset},${encodeURIComponent(codeToSave)}`;
-    hiddenLink.target = '_blank';
     hiddenLink.download = fileName;
     return hiddenLink;
 }
@@ -131,9 +192,10 @@ function handleKeydown(event) {
 // Add event listener
 document.addEventListener('keydown', handleKeydown, { capture: false, passive: false });
 
+// Function to show/hide the console
 function displayConsole(typeExecute) {
     var playground = document.getElementsByClassName('playground')[0];
     var console = document.getElementsByClassName('playground-console')[0];
     var displayConsole = window.getComputedStyle(console).display;
-    displayConsole = !typeExecute ? (displayConsole === 'none' ? (console.style.display = 'block', playground.style.width = 'calc(50vw - 22.5px)') : (console.style.display = 'none', playground.style.width = 'calc(100vw - 30px)')) : (displayConsole = console.style.display = 'block', playground.style.width = 'calc(50vw - 22.5px)');
+    displayConsole = !typeExecute ? (displayConsole === 'none' ? (console.style.display = 'block', clearButton.style.display = 'block', playground.style.width = 'calc(50vw - 22.5px)') : (console.style.display = 'none', clearButton.style.display = 'none', playground.style.width = 'calc(100vw - 30px)')) : (displayConsole = console.style.display = 'block', clearButton.style.display = 'block', playground.style.width = 'calc(50vw - 22.5px)');
 }

@@ -38,7 +38,7 @@ html {
 }
 
 ::selection {
-    background: #d7d4f0
+    background: #d7d4f0;
 }
 
 body {
@@ -90,12 +90,16 @@ body {
     .header {
         font-size: 24px;
     }
+
+    ;
 }
 
 @media (max-width: 1046px) {
     .header {
         font-size: 20px;
     }
+
+    ;
 }
 
 .header>span {
@@ -125,7 +129,7 @@ body {
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     overflow: overlay;
     border: 1px solid #dee2e6 !important;
-    padding: 1rem !important
+    padding: 1rem !important;
 }
 
 /* Hover effect for console messages */
@@ -171,12 +175,12 @@ pre.CodeMirror-line {
 
 
 button {
-    border-radius: 0
+    border-radius: 0;
 }
 
 button:focus {
     outline: 1px dotted;
-    outline: 5px auto -webkit-focus-ring-color
+    outline: 5px auto -webkit-focus-ring-color;
 }
 
 button,
@@ -184,22 +188,22 @@ textarea {
     margin: 0;
     font-family: inherit;
     font-size: inherit;
-    line-height: inherit
+    line-height: inherit;
 }
 
 button {
     overflow: visible;
-    text-transform: none
+    text-transform: none;
 }
 
 ::-webkit-file-upload-button {
     font: inherit;
-    -webkit-appearance: button
+    -webkit-appearance: button;
 }
 
 textarea {
     overflow: auto;
-    resize: none
+    resize: none;
 }
 
 .container {
@@ -208,7 +212,7 @@ textarea {
     padding-right: 15px;
     padding-left: 15px;
     margin-right: auto;
-    margin-left: auto
+    margin-left: auto;
 }
 
 .row {
@@ -229,14 +233,14 @@ textarea {
 }
 
 label {
-    display: inline-block
+    display: inline-block;
 }
 
 input {
     margin: 0;
     font-family: inherit;
     font-size: inherit;
-    line-height: inherit
+    line-height: inherit;
 }
 
 input[type=file] {
@@ -256,7 +260,7 @@ input[type=file] {
     border: 1px solid #dee2e6;
     border-radius: 0.375rem;
     transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
-    overflow: hidden
+    overflow: hidden;
 }
 
 input[type=file]:focus {
@@ -264,7 +268,7 @@ input[type=file]:focus {
     background-color: #fff;
     border-color: #86b7fe;
     outline: 0;
-    box-shadow: 0 0 0 .25rem rgba(13, 110, 253, .25)
+    box-shadow: 0 0 0 .25rem rgba(13, 110, 253, .25);
 }
 
 input[type=file]::-webkit-file-upload-button,
@@ -283,15 +287,15 @@ input[type=file]::file-selector-button {
     border-inline-end-width: 1px;
     border-radius: 0;
     -webkit-transition: color .15s ease-in-out, background-color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out;
-    transition: color .15s ease-in-out, background-color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out
+    transition: color .15s ease-in-out, background-color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out;
 }
 
 input[type=file]:hover::-webkit-file-upload-button,
 input[type=file]:hover::file-selector-button {
-    background-color: #e9ecef
+    background-color: #e9ecef;
 }
 
-.btn {
+.button {
     cursor: pointer;
     height: 100%;
     display: inline-block;
@@ -315,83 +319,100 @@ input[type=file]:hover::file-selector-button {
 }
 
 @media (prefers-reduced-motion:reduce) {
-    .btn {
+    .button {
         transition: none
     }
+
+    ;
 }
 
-.btn:hover {
+.button:hover {
     color: #212529;
-    text-decoration: none
+    text-decoration: none;
 }
 
-.btn:focus {
+.button:focus {
     outline: 0;
-    box-shadow: 0 0 0 .2rem rgba(0, 123, 255, .25)
+    box-shadow: 0 0 0 .2rem rgba(0, 123, 255, .25);
 }
 
-.run-btn {
+.primary-button {
     color: #fff;
     background-color: #007bff;
-    border-color: #007bff
+    border-color: #007bff;
 }
 
-.run-btn:hover {
-    color: #fff;
-    background-color: #0069d9;
-    border-color: #0062cc
-}
-
-.run-btn:focus {
+.primary-button:hover {
     color: #fff;
     background-color: #0069d9;
     border-color: #0062cc;
-    box-shadow: 0 0 0 .2rem rgba(38, 143, 255, .5)
 }
 
-.run-btn:active {
+.primary-button:focus {
+    color: #fff;
+    background-color: #0069d9;
+    border-color: #0062cc;
+    box-shadow: 0 0 0 .2rem rgba(38, 143, 255, .5);
+}
+
+.primary-button:active {
     color: #fff;
     background-color: #0062cc;
-    border-color: #005cbf
+    border-color: #005cbf;
 }
 
-.run-btn:active:focus {
-    box-shadow: 0 0 0 .2rem rgba(38, 143, 255, .5)
+.primary-button:active:focus {
+    box-shadow: 0 0 0 .2rem rgba(38, 143, 255, .5);
 }
 
-.clear-btn {
+.primary-button:disabled {
+    color: #fff;
+    background-color: #0057b3;
+    border-color: #005cbf;
+    cursor: not-allowed;
+}
+
+.secondary-button {
     color: #fff;
     background-color: #6c757d;
-    border-color: #6c757d
+    border-color: #6c757d;
 }
 
-.clear-btn:hover {
-    color: #fff;
-    background-color: #5a6268;
-    border-color: #545b62
-}
-
-.clear-btn:focus {
+.secondary-button:hover {
     color: #fff;
     background-color: #5a6268;
     border-color: #545b62;
-    box-shadow: 0 0 0 .2rem rgba(130, 138, 145, .5)
 }
 
-.clear-btn:active {
+.secondary-button:focus {
+    color: #fff;
+    background-color: #5a6268;
+    border-color: #545b62;
+    box-shadow: 0 0 0 .2rem rgba(130, 138, 145, .5);
+}
+
+.secondary-button:active {
     color: #fff;
     background-color: #545b62;
-    border-color: #4e555b
+    border-color: #4e555b;
 }
 
-.clear-btn:active:focus {
-    box-shadow: 0 0 0 .2rem rgba(130, 138, 145, .5)
+.secondary-button:active:focus {
+    box-shadow: 0 0 0 .2rem rgba(130, 138, 145, .5);
 }
 
-.display-btn {
+.display-button,
+.clear-button {
     height: min-content;
     position: absolute;
     z-index: 999;
-    left: calc(100vw - 135px);
     top: 90px;
+}
+
+.display-button {
+    left: calc(100vw - 112.75px);
+}
+
+.clear-button {
+    left: calc(100vw - 184.5px);
 }
