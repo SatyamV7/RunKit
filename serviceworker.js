@@ -4,8 +4,8 @@
 // Names of the two caches used in this version of the service worker.
 // Change to v2, etc. when you update any of the local resources, which will
 // in turn trigger the install event again.
-const PRECACHE = 'Static_Cache v1.0.4-ProductionBuild';
-const RUNTIME = 'Dynamic_Cache v1.0.4-ProductionBuild';
+const PRECACHE = 'Static_Cache v1.0.5-ProductionBuild';
+const RUNTIME = 'Dynamic_Cache v1.0.5-ProductionBuild';
 
 // A list of local resources we always want to be cached.
 const PRECACHE_URLS = [
@@ -17,7 +17,11 @@ const PRECACHE_URLS = [
     'src/ExecutorEngine.js',
     'libs/codemirror/5.62.0/codemirror.min.js',
     'libs/codemirror/5.62.0/codemirror.min.css',
+    'libs/codemirror/5.62.0/addon/closebrackets.min.js',
+    'libs/codemirror/5.62.0/addon/hint/show-hint.min.js',
+    'libs/codemirror/5.62.0/addon/hint/show-hint.min.css',
     'libs/codemirror/5.62.0/mode/javascript/javascript.min.js',
+    'libs/codemirror/5.62.0/addon/hint/javascript-hint.min.js',
     'assets/fonts/JetBrainsMono-Regular.woff2',
 ];
 
