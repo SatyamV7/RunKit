@@ -132,6 +132,17 @@ body {
     padding: 1rem !important;
 }
 
+.console-message {
+    padding: 0.5rem;
+    margin: 0.5rem;
+    border-radius: 5px;
+    font-size: 14px;
+    font-weight: 500;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
 /* Hover effect for console messages */
 .console-message:hover {
     cursor: pointer;
@@ -142,12 +153,23 @@ body {
     color: #31ad31;
 }
 
+.warn {
+    color: #ff9f00;
+}
+
 .error {
     color: #dc3545;
 }
 
 .msg {
     color: #007bff;
+}
+
+.undefined {
+    margin: 0;
+    padding: 0;
+    display: none;
+    border: none;
 }
 
 #code {

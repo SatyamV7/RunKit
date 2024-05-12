@@ -1,3 +1,4 @@
+// States & Variables
 let Executor; // Variable to store the Web Worker
 var importedLibrary; // Variable to store imported library code
 var isExecuting = false; // Variable to store the execution status
@@ -33,7 +34,7 @@ function executeCode() {
     runButton.disabled = true;
     stopButton.disabled = false;
     // Create a new Web Worker
-    Executor = new Worker('/src/Executor.js');
+    Executor = new Worker('/src/ExecutorEngine.js');
     // Set up a message handler to receive the results
     Executor.onmessage = function (event) {
         const { type, message, executionStatus } = event.data;
