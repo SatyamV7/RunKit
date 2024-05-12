@@ -15,10 +15,32 @@ var editor = CodeMirror.fromTextArea(document.getElementById('code'), {
     lineNumbers: true,
     mode: 'javascript',
     autofocus: true,
-    autoComplete: true,
     smartIndent: true,
     lineWrapping: true,
     indentUnit: 4,
+    autoCloseBrackets: true,
+    extraKeys: { "Ctrl-Space": "autocomplete" }, // Trigger autocomplete with Ctrl-Space
+    hintOptions: {
+        completeSingle: false, // Show hints on every keystroke
+        async: true // Enable asynchronous hint fetching
+    }
+});
+
+// Enable CodeMirror hints
+CodeMirror.commands.autocomplete = function (cm) {
+    cm.showHint({
+        hint: CodeMirror.hint.javascript,
+        completeSingle: false,
+        async: true
+    });
+};
+
+// Show hints as you type
+editor.on('change', function (cm, change) {
+    var lastChar = change.text[change.text.length - 1];
+    if (lastChar && (/\w/.test(lastChar))) {
+        CodeMirror.commands.autocomplete(cm);
+    }
 });
 
 // Function to execute the code in the editor
