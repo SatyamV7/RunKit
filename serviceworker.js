@@ -15,13 +15,10 @@ const PRECACHE_URLS = [
     'favicon.ico',
     'src/Styles.css',
     'src/ExecutorEngine.js',
-    'libs/codemirror/5.62.0/codemirror.min.js',
-    'libs/codemirror/5.62.0/codemirror.min.css',
-    'libs/codemirror/5.62.0/addon/closebrackets.min.js',
-    'libs/codemirror/5.62.0/addon/hint/show-hint.min.js',
-    'libs/codemirror/5.62.0/addon/hint/show-hint.min.css',
-    'libs/codemirror/5.62.0/mode/javascript/javascript.min.js',
-    'libs/codemirror/5.62.0/addon/hint/javascript-hint.min.js',
+    'libs/monaco-editor@0.48.0/package/min/vs/loader.js',
+    'libs/monaco-editor@0.48.0/package/min/vs/editor/editor.main.css',
+    'libs/monaco-editor@0.48.0/package/min/vs/editor/editor.main.nls.js',
+    'libs/monaco-editor@0.48.0/package/min/vs/editor/editor.main.js',
     'assets/fonts/JetBrainsMono-Regular.woff2',
 ];
 

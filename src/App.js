@@ -10,46 +10,31 @@ var clearButton = document.querySelector('button.button.clear-button');
 const fileInput = document.querySelector('input[type="file"]');
 const consoleDiv = document.getElementById('console');
 
-// Initialize CodeMirror
-var editor = CodeMirror.fromTextArea(document.getElementById('code'), {
-    lineNumbers: true,
-    mode: 'javascript',
-    autofocus: true,
-    smartIndent: true,
-    lineWrapping: true,
-    indentUnit: 4,
-    autoCloseBrackets: true,
-    extraKeys: { 'Ctrl-Space': 'autocomplete' }, // Trigger autocomplete with Ctrl-Space
-    hintOptions: {
-        completeSingle: false, // Show hints on every keystroke
-        async: true // Enable asynchronous hint fetching
-    }
-});
-
-// Enable CodeMirror hints
-CodeMirror.commands.autocomplete = function (cm) {
-    cm.showHint({
-        hint: CodeMirror.hint.javascript,
-        completeSingle: false,
-        async: true
-    });
-};
-
-// Show hints as you type
-editor.on('change', function (cm, change) {
-    var lastChar = change.text[change.text.length - 1];
-    if (lastChar && (/\w/.test(lastChar))) {
-        CodeMirror.commands.autocomplete(cm);
-    }
+// Initialize Monaco
+var editor = monaco.editor.create(document.getElementById('editor'), {
+    value: ['console.log("Hello, World!");'].join('\n'),
+    language: 'javascript',
+    minimap: { enabled: false },
+    acceptSuggestionOnEnter: 'smart',
+    autoClosingBrackets: 'always',
+    autoClosingComments: 'always',
+    autoIndent: 'advanced',
+    quickSuggestions: true,
+    formatOnType: true,
+    formatOnPaste: true,
+    automaticLayout: true,
+    parameterHints: { enabled: true },
+    highlightActiveBracketPair: true,
+    lineNumbersMinChars: 2,
 });
 
 // Function to execute the code in the editor
 function executeCode() {
     if (importedLibrary !== undefined) {
-        var code = importedLibrary + '\n' + editor.getValue(); // Get code from Imported File & CodeMirror editor
+        var code = importedLibrary + '\n' + editor.getValue(); // Get code from Imported File & Monaco editor
     }
     else {
-        var code = editor.getValue(); // Get code from Imported File & CodeMirror editor
+        var code = editor.getValue(); // Get code from Imported File & Monaco editor
     }
     clearConsole();
     isExecuting = true;
@@ -200,7 +185,7 @@ document.addEventListener('keydown', function (event) {
 });
 
 // Save the code in the editor to a localstorage upon detecting a change in the editor
-editor.on('change', function () {
+window.editor.getModel().onDidChangeContent((event) => {
     localStorage.setItem('code', editor.getValue());
 });
 
@@ -257,52 +242,3 @@ function handleKeydown(event) {
 
 // Add event listener
 document.addEventListener('keydown', handleKeydown, { capture: false, passive: false });
-
-// Context Menu
-document.addEventListener('DOMContentLoaded', function () {
-    var codeMirrorElements = document.getElementsByClassName('CodeMirror');
-    for (var i = 0; i < codeMirrorElements.length; i++) {
-        codeMirrorElements[i].addEventListener('contextmenu', function (e) {
-            e.preventDefault();
-            var contextMenu = document.getElementById('contextMenu');
-            contextMenu.style.top = e.clientY + 'px';
-            contextMenu.style.left = e.clientX + 'px';
-            contextMenu.className = 'show';
-        }, false);
-    }
-});
-
-document.addEventListener('click', function (event) {
-    document.getElementById('contextMenu').className = 'hide';
-});
-
-function selectAllCode() {
-    var docLength = editor.lineCount();
-    var start = { line: 0, ch: 0 };
-    var end = { line: docLength - 1, ch: editor.getLine(docLength - 1).length };
-    editor.setSelection(start, end);
-}
-
-document.getElementById("selectAllButton").addEventListener("click", selectAllCode);
-
-function getFullRange() {
-    var doc = editor.getDoc();
-    var start = { line: doc.firstLine(), ch: 0 };
-    var end = { line: doc.lastLine(), ch: editor.getLine(doc.lastLine()).length };
-    return { from: start, to: end };
-}
-
-function getSelectedRange() {
-    return { from: editor.getCursor(true), to: editor.getCursor(false) };
-}
-
-function autoFormatSelection(Range) {
-    if (Range === 'FullRange') {
-        var range = getFullRange();
-        editor.autoFormatRange(range.from, range.to);
-    }
-    else {
-        var range = getSelectedRange();
-        editor.autoFormatRange(range.from, range.to);
-    }
-}

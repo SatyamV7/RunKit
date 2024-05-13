@@ -4,11 +4,10 @@
 <head>
     <meta charset="UTF-8">
     <link rel="manifest" href="manifest.json">
-    <title>RunKit</title>
     <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
-    <link rel="stylesheet" href="libs/codemirror/5.62.0/codemirror.min.css">
-    <link rel="stylesheet" href="libs/codemirror/5.62.0/addon/hint/show-hint.min.css">
+    <link rel="stylesheet" href="libs/monaco-editor@0.48.0/package/min/vs/editor/editor.main.css">
     <link rel="stylesheet" href="src/Styles.css">
+    <title>RunKit</title>
 </head>
 
 <body>
@@ -36,37 +35,7 @@
                 <button onclick="clearConsole()" class="button secondary-button clear-button">Clear</button>
                 <button class="button secondary-button display-button" onclick="displayConsole()">Console</button>
             </div>
-            <div class="column playground">
-                <div class="hide" id="contextMenu">
-                    <ul>
-                        <li>
-                            <button class="button secondary-button"
-                                style="width: -webkit-fill-available;margin: 2.5px 0;" id="selectAllButton">Select
-                                All</button>
-                        </li>
-                        <li>
-                            <button class="button secondary-button"
-                                style="width: -webkit-fill-available;margin: 2.5px 0;" onclick="executeCode()">Run
-                                Code</button>
-                        </li>
-                        <li>
-                            <button class="button secondary-button"
-                                style="width: -webkit-fill-available;margin: 2.5px 0;" onclick="saveCodeToFile()">Save
-                                As</button>
-                        <li>
-                            <button class="button secondary-button"
-                                style="width: -webkit-fill-available;margin: 2.5px 0;"
-                                onclick="autoFormatSelection('FullRange')">Format
-                                Document</button>
-                        </li>
-                        <li>
-                            <button class="button secondary-button"
-                                style="width: -webkit-fill-available;margin: 2.5px 0;"
-                                onclick="autoFormatSelection()">Format
-                                Selection</button>
-                    </ul>
-                </div>
-                <textarea id="code" name="code"></textarea>
+            <div class="column playground" id="editor">
             </div>
             <div class="column playground-console">
                 <div id="console"></div>
@@ -83,13 +52,11 @@
         document.addEventListener('contextmenu', function (e) {
             e.preventDefault();
         });
+        var require = { paths: { vs: 'libs/monaco-editor@0.48.0/package/min/vs' } };
     </script>
-    <script src="libs/codemirror/5.62.0/codemirror.min.js"></script>
-    <script src="libs/codemirror/5.62.0/mode/javascript/javascript.min.js"></script>
-    <script src="libs/codemirror/5.62.0/addon/closebrackets.min.js"></script>
-    <script src="libs/codemirror/5.62.0/addon/hint/show-hint.min.js"></script>
-    <script src="libs/codemirror/5.62.0/addon/hint/javascript-hint.min.js"></script>
-    <script src="libs/codemirror/5.62.0/util/formatting.js"></script>
+    <script src="libs/monaco-editor@0.48.0/package/min/vs/loader.js"></script>
+    <script src="libs/monaco-editor@0.48.0/package/min/vs/editor/editor.main.nls.js"></script>
+    <script src="libs/monaco-editor@0.48.0/package/min/vs/editor/editor.main.js"></script>
     <script src="src/App.js"></script>
     <script>
         if ('serviceWorker' in navigator) {
