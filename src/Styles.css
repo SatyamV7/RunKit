@@ -241,6 +241,10 @@ body {
     display: none;
 }
 
+.monaco-editor {
+    border-radius: 10px;
+}
+
 .monaco-editor .overflow-guard {
     border-radius: 10px
 }
