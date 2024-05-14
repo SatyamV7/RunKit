@@ -25,16 +25,20 @@
                 RunKit | In-Browser JavaScript Playground
             </span>
             <span>
-                <input type="file" name="FileInput" id="FileInput" accept=".js">
-                <button onclick="displayConsole(true)" class="button primary-button run-button">Run&nbsp;▶</button>
-                <button onclick="displayConsole(true)" class="button primary-button stop-button">Stop&nbsp;⚠</button>
+                <input type="file" name="FileInput" id="FileInput" accept=".js" aria-label="Import External Libraries">
+                <button onclick="displayConsole(true)" class="button primary-button run-button"
+                    aria-label="Run Code">Run&nbsp;▶</button>
+                <button onclick="displayConsole(true)" class="button primary-button stop-button"
+                    aria-label="Stop Code">Stop&nbsp;⚠</button>
             </span>
         </div>
         <div class="row">
             <div class="Buttons">
-                <button onclick="saveCodeToFile()" class="button download-button">⭳</button>
-                <button onclick="clearConsole()" class="button secondary-button clear-button">Clear</button>
-                <button class="button secondary-button display-button" onclick="displayConsole()">Console</button>
+                <button onclick="saveCodeToFile()" class="button download-button" aria-label="Save As">⭳</button>
+                <button onclick="clearConsole()" class="button secondary-button clear-button"
+                    aria-label="Clear Console">Clear</button>
+                <button class="button secondary-button display-button" onclick="displayConsole()"
+                    aria-label="Show/Hide Console">Console</button>
             </div>
             <div class="column playground" id="editor">
             </div>

@@ -106,7 +106,8 @@ function clearConsole() {
 function displayConsole(typeExecute) {
     var playground = document.getElementsByClassName('playground')[0];
     var console = document.getElementsByClassName('playground-console')[0];
-    var clearButton = document.getElementsByClassName('clear-button')[0]; // Assuming you have a clearButton
+    var downloadButton = document.getElementsByClassName('download-button')[0];
+    var clearButton = document.getElementsByClassName('clear-button')[0];
     var displayConsole = window.getComputedStyle(console).display;
     if (typeExecute) {
         displayConsole = console.style.display = 'block';
@@ -118,11 +119,13 @@ function displayConsole(typeExecute) {
             console.style.display = 'block';
             clearButton.style.display = 'block';
             playground.style.width = 'calc(50vw - 22.5px)';
+            downloadButton.style.left = 'calc(50vw - 65px)';
             localStorage.setItem('consoleState', 'block');
         } else {
             console.style.display = 'none';
             clearButton.style.display = 'none';
             playground.style.width = 'calc(100vw - 30px)';
+            downloadButton.style.left = 'calc(100vw - 160.65px)';
             localStorage.setItem('consoleState', 'none');
         }
     }
@@ -134,10 +137,12 @@ window.onload = function () {
     if (consoleState) {
         var playground = document.getElementsByClassName('playground')[0];
         var console = document.getElementsByClassName('playground-console')[0];
-        var clearButton = document.getElementsByClassName('clear-button')[0]; // Assuming you have a clearButton
+        var clearButton = document.getElementsByClassName('clear-button')[0];
+        var downloadButton = document.getElementsByClassName('download-button')[0];
         console.style.display = consoleState;
         clearButton.style.display = consoleState;
         playground.style.width = consoleState === 'none' ? 'calc(100vw - 30px)' : 'calc(50vw - 22.5px)';
+        downloadButton.style.left = consoleState === 'none' ? 'calc(100vw - 160.65px)' : 'calc(50vw - 65px)';
     }
 };
 
