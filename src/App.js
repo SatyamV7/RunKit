@@ -27,6 +27,7 @@ var editor = monaco.editor.create(document.getElementById('editor'), {
     highlightActiveBracketPair: true,
     lineNumbersMinChars: 2,
     fontFamily: "JetBrains Mono",
+    stickyScroll: { enabled: false },
 });
 
 // Function to execute the code in the editor
