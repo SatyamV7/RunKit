@@ -12,7 +12,7 @@ const consoleDiv = document.getElementById('console');
 
 // Initialize Monaco
 var editor = monaco.editor.create(document.getElementById('editor'), {
-    value: ['console.log("Hello, World!");'].join('\n'),
+    value: ['// Your JavaScript Code Here!'].join('\n'),
     language: 'javascript',
     minimap: { enabled: false },
     acceptSuggestionOnEnter: 'smart',
@@ -26,6 +26,7 @@ var editor = monaco.editor.create(document.getElementById('editor'), {
     parameterHints: { enabled: true },
     highlightActiveBracketPair: true,
     lineNumbersMinChars: 2,
+    fontFamily: "JetBrains Mono",
 });
 
 // Function to execute the code in the editor
