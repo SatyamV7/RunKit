@@ -143,7 +143,7 @@ window.onload = function () {
         console.style.display = consoleState;
         clearButton.style.display = consoleState;
         playground.style.width = consoleState === 'none' ? 'calc(100vw - 30px)' : 'calc(50vw - 22.5px)';
-        downloadButton.style.left = consoleState === 'none' ? 'calc(100vw - 160.65px)' : 'calc(50vw - 65px)';
+        downloadButton.style.left = consoleState === 'none' ? 'calc(100vw - 122.65px)' : 'calc(50vw - 65px)';
     }
 };
 
