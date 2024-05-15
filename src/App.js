@@ -126,7 +126,7 @@ function displayConsole(typeExecute) {
             console.style.display = 'none';
             clearButton.style.display = 'none';
             playground.style.width = 'calc(100vw - 30px)';
-            downloadButton.style.left = 'calc(100vw - 160.65px)';
+            downloadButton.style.left = 'calc(100vw - 122.65px)';
             localStorage.setItem('consoleState', 'none');
         }
     }
