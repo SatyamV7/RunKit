@@ -114,6 +114,7 @@ function displayConsole(typeExecute) {
         displayConsole = console.style.display = 'block';
         clearButton.style.display = 'block';
         playground.style.width = 'calc(50vw - 22.5px)';
+        downloadButton.style.left = 'calc(50vw - 65px)';
         localStorage.setItem('consoleState', 'block');
     } else {
         if (displayConsole === 'none') {
