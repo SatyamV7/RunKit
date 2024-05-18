@@ -4,11 +4,26 @@ var importedLibrary; // Variable to store imported library code
 var isExecuting = false; // Variable to store the execution status
 
 // UI Elements
-var runButton = document.querySelector('button.button.primary-button.run-button');
-var stopButton = document.querySelector('button.button.primary-button.stop-button');
-var clearButton = document.querySelector('button.button.clear-button');
+const runButton = document.querySelector('button.button.primary-button.run-button');
+const stopButton = document.querySelector('button.button.primary-button.stop-button');
+const clearButton = document.querySelector('button.button.clear-button');
 const fileInput = document.querySelector('input[type="file"]');
 const consoleDiv = document.getElementById('console');
+const fileInputButton = document.querySelector('button#fileInput');
+const saveButton = document.querySelector('button#Save');
+
+let fileHandle;
+
+const options = {
+    types: [
+        {
+            description: 'JavaScript',
+            accept: {
+                'application/javascript': ['.js'],
+            },
+        },
+    ],
+};
 
 // Initialize Monaco
 var editor = monaco.editor.create(document.getElementById('editor'), {
@@ -28,6 +43,48 @@ var editor = monaco.editor.create(document.getElementById('editor'), {
     lineNumbersMinChars: 2,
     fontFamily: "JetBrains Mono",
     stickyScroll: { enabled: false },
+});
+
+// Adding Save & Save As button to the editor's conext menu
+
+editor.addAction({
+    id: 'runCode',
+    label: 'Run Code',
+    keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter],
+    contextMenuGroupId: 'navigation',
+    contextMenuOrder: 1.5,
+    run: function () {
+        executeCode();
+    }
+});
+
+editor.addAction({
+    id: 'save',
+    label: 'Save',
+    keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_S],
+    contextMenuGroupId: '3_snippet',
+    contextMenuOrder: 2,
+    run: async function () {
+        if (fileHandle) {
+            const writable = await fileHandle.createWritable();
+            await writable.write(editor.getValue());
+            await writable.close();
+        } else {
+            saveCodeToNewFile();
+        }
+        checkFileHandleAndUpdateLocalStorage();
+    }
+});
+
+editor.addAction({
+    id: 'saveAs',
+    label: 'Save As',
+    keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KEY_S],
+    contextMenuGroupId: '3_snippet',
+    contextMenuOrder: 2.5,
+    run: function () {
+        saveCodeToNewFile();
+    }
 });
 
 // Function to execute the code in the editor
@@ -115,6 +172,7 @@ function displayConsole(typeExecute) {
         clearButton.style.display = 'block';
         playground.style.width = 'calc(50vw - 22.5px)';
         downloadButton.style.left = 'calc(50vw - 65px)';
+        fileInputButton.style.left = 'calc(50vw - 118px)';
         localStorage.setItem('consoleState', 'block');
     } else {
         if (displayConsole === 'none') {
@@ -122,16 +180,18 @@ function displayConsole(typeExecute) {
             clearButton.style.display = 'block';
             playground.style.width = 'calc(50vw - 22.5px)';
             downloadButton.style.left = 'calc(50vw - 65px)';
+            fileInputButton.style.left = 'calc(50vw - 118px)';
             localStorage.setItem('consoleState', 'block');
         } else {
             console.style.display = 'none';
             clearButton.style.display = 'none';
             playground.style.width = 'calc(100vw - 30px)';
-            downloadButton.style.left = 'calc(100vw - 122.65px)';
+            downloadButton.style.left = 'calc(100vw - 121px)';
+            fileInputButton.style.left = 'calc(100vw - 174px)';
             localStorage.setItem('consoleState', 'none');
         }
     }
-}
+};
 
 // Call this function on page load to set the console state
 window.onload = function () {
@@ -144,7 +204,8 @@ window.onload = function () {
         console.style.display = consoleState;
         clearButton.style.display = consoleState;
         playground.style.width = consoleState === 'none' ? 'calc(100vw - 30px)' : 'calc(50vw - 22.5px)';
-        downloadButton.style.left = consoleState === 'none' ? 'calc(100vw - 122.65px)' : 'calc(50vw - 65px)';
+        downloadButton.style.left = consoleState === 'none' ? 'calc(100vw - 121px)' : 'calc(50vw - 65px)';
+        fileInputButton.style.left = consoleState === 'none' ? 'calc(100vw - 174px)' : 'calc(50vw - 118px)';
     }
 };
 
@@ -193,7 +254,7 @@ document.addEventListener('keydown', function (event) {
 });
 
 // Save the code in the editor to a localstorage upon detecting a change in the editor
-window.editor.getModel().onDidChangeContent((event) => {
+window.editor.getModel().onDidChangeContent(() => {
     localStorage.setItem('code', editor.getValue());
 });
 
@@ -224,29 +285,78 @@ function createHiddenLink(codeToSave) {
     hiddenLink.href = `data:${mimeType};charset=${charset},${encodeURIComponent(codeToSave)}`;
     hiddenLink.download = fileName;
     return hiddenLink;
-}
+};
 
 // Function to trigger the download
 function triggerDownload(hiddenLink) {
     document.body.appendChild(hiddenLink);
     hiddenLink.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
     hiddenLink.remove(); // Remove the link immediately after click
-}
+};
 
-function saveCodeToFile() {
+function saveCodeToNewFile() {
     const codeToSave = editor.getValue();
     const hiddenLink = createHiddenLink(codeToSave);
     setTimeout(() => triggerDownload(hiddenLink), 10);
-}
+};
 
-// Function to handle the keydown event
-function handleKeydown(event) {
-    if (event.ctrlKey && event.key === 's') {
-        event.preventDefault();
-        event.stopPropagation();
-        saveCodeToFile();
+// Function to check fileHandle and update local storage
+function checkFileHandleAndUpdateLocalStorage() {
+    if (fileHandle) {
+        localStorage.setItem('code', '// Write your JavaScript code here\n');
     }
 }
 
-// Add event listener
-document.addEventListener('keydown', handleKeydown, { capture: false, passive: false });
+// Function to import code from a file
+(function () {
+    function importCodeFromFile() {
+        fileInputButton.onclick = async () => {
+            [fileHandle] = await window.showOpenFilePicker(options);
+            const file = await fileHandle.getFile();
+            const content = await file.text();
+            editor.setValue(content);
+            checkFileHandleAndUpdateLocalStorage(); // Check fileHandle after file is opened
+            return content;
+        };
+    };
+    importCodeFromFile();
+})();
+
+// Function to save code to a file
+(function () {
+    function saveCodeToFile() {
+        saveButton.onclick = async () => {
+            if (fileHandle) {
+                const writable = await fileHandle.createWritable();
+                await writable.write(editor.getValue());
+                await writable.close();
+            } else {
+                saveCodeToNewFile();
+            }
+            checkFileHandleAndUpdateLocalStorage(); // Check fileHandle after file is saved
+        };
+    }
+    saveCodeToFile();
+})();
+
+(function () {
+    function checkFileHandleAndUpdate() {
+        if (fileHandle) { checkFileHandleAndUpdateLocalStorage(); };
+    };
+    checkFileHandleAndUpdate();
+})();
+
+document.addEventListener('keydown', async function (event) {
+    if (event.ctrlKey && event.key === 's') {
+        event.preventDefault();
+        event.stopPropagation();
+        if (fileHandle) {
+            const writable = await fileHandle.createWritable();
+            await writable.write(editor.getValue());
+            await writable.close();
+        } else {
+            saveCodeToNewFile();
+        }
+        checkFileHandleAndUpdateLocalStorage(); // Check fileHandle after file is saved
+    }
+}, { capture: false, passive: false });

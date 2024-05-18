@@ -478,7 +478,8 @@ input[type=file]:hover::file-selector-button {
 
 .display-button,
 .clear-button,
-.download-button {
+.download-button,
+.open-file-button {
     padding: 7px !important;
     position: absolute;
     z-index: 999;
@@ -498,16 +499,21 @@ input[type=file]:hover::file-selector-button {
 }
 
 .clear-button {
-    left: calc(100vw - 122.65px);
+    left: calc(100vw - 121px);
 }
 
 .download-button {
     left: calc(50vw - 65px);
 }
 
+.open-file-button {
+    left: calc(50vw - 118px);
+}
+
 .display-button:hover,
 .clear-button:hover,
-.download-button:hover {
+.download-button:hover,
+.open-file-button:hover {
     color: #0074f0;
     background-color: #f5f5f5;
 }
