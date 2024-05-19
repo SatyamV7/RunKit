@@ -103,7 +103,7 @@ function executeCode() {
     Executor = new Worker('/src/ExecutorEngine.js');
     // Set up a message handler to receive the results
     Executor.onmessage = function (event) {
-        const { type, message, executionStatus } = event.data;
+        const { type, message, typeOf, executionStatus } = event.data;
         logToConsole(message, type);
         // If the worker has started executing the code, disable the runButton
         if (executionStatus === 'executionStarted') {

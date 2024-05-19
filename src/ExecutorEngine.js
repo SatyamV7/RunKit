@@ -15,9 +15,41 @@ self.onmessage = function (event) {
     const timers = {};
 
     // Override console.log to also post messages back to the main thread
+    function JavaScriptObject(obj) {
+        let formatted = '{ ';
+        for (let key in obj) {
+            let value = obj[key];
+            if (typeof value === 'string') {
+                value = `'${value}'`;
+            }
+            formatted += `${key}: ${value}, `;
+        }
+        formatted = formatted.slice(0, -2) + ' }';
+        return formatted;
+    }
+
     console.log = (...args) => {
         consoleLog.apply(console, args);
-        self.postMessage({ type: 'log', message: args.join(' ') });
+        args.forEach(arg => {
+            let message;
+            let typeOf = typeof arg;
+            if (arg instanceof Error) {
+                message = arg.message;
+                self.postMessage({ type: 'error', message: message });
+            }
+            switch (typeOf) {
+                case 'object':
+                    message = JavaScriptObject(arg);
+                    break;
+                case 'string':
+                    message = `'${arg}'`;
+                    break;
+                default:
+                    message = arg;
+                    break;
+            }
+            self.postMessage({ type: 'log', message: message, typeOf: typeOf });
+        });
     };
 
     // Override console.warn to also post messages back to the main thread
@@ -88,7 +120,7 @@ self.onmessage = function (event) {
 
         // If the result is not undefined, post it back as a log message
         if (result !== undefined) {
-            self.postMessage({ type: 'log', message: String(result) });
+            self.postMessage({ type: 'log', message: result, typeOf: typeof result });
         }
     } catch (error) {
         // Determine error type and post the error message back
