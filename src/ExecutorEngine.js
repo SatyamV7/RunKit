@@ -32,12 +32,7 @@ self.onmessage = function (event) {
         consoleLog.apply(console, args);
         args.forEach(arg => {
             let message;
-            let typeOf = typeof arg;
-            if (arg instanceof Error) {
-                message = arg.message;
-                self.postMessage({ type: 'error', message: message });
-            }
-            switch (typeOf) {
+            switch (typeof arg) {
                 case 'object':
                     message = JavaScriptObject(arg);
                     break;
@@ -48,7 +43,7 @@ self.onmessage = function (event) {
                     message = arg;
                     break;
             }
-            self.postMessage({ type: 'log', message: message, typeOf: typeOf });
+            self.postMessage({ type: 'log', message: message, typeOf: typeof arg });
         });
     };
 
@@ -73,7 +68,7 @@ self.onmessage = function (event) {
     console.timeLog = (label = 'default', ...args) => {
         if (timers[label]) {
             const elapsed = performance.now() - timers[label];
-            const message = `${label}: ${elapsed.toFixed(3)}ms`;
+            const message = `${label}: ${+elapsed.toFixed(3)}ms`;
             consoleLog.apply(console, [message, ...args]);
             self.postMessage({ type: 'log', message: [message, ...args].join(' ') });
         } else {
@@ -87,7 +82,7 @@ self.onmessage = function (event) {
     console.timeEnd = (label = 'default', ...args) => {
         if (timers[label]) {
             const elapsed = performance.now() - timers[label];
-            const message = `${label}: ${elapsed.toFixed(3)}ms - timer ended`;
+            const message = `${label}: ${+elapsed.toFixed(3)}ms - timer ended`;
             consoleLog.apply(console, [message, ...args]);
             self.postMessage({ type: 'log', message: [message, ...args].join(' ') });
             delete timers[label]; // Remove the timer
