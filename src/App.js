@@ -11,6 +11,7 @@ const fileInput = document.querySelector('input[type="file"]');
 const consoleDiv = document.getElementById('console');
 const fileInputButton = document.querySelector('button#fileInput');
 const saveButton = document.querySelector('button#Save');
+const toggleButton = document.querySelector('input[type="checkbox"]');
 
 let fileHandle;
 
@@ -305,7 +306,7 @@ function checkFileHandleAndUpdateLocalStorage() {
     if (fileHandle) {
         localStorage.setItem('code', '// Write your JavaScript code here\n');
     }
-}
+};
 
 // Function to import code from a file
 (function () {
@@ -360,3 +361,54 @@ document.addEventListener('keydown', async function (event) {
         checkFileHandleAndUpdateLocalStorage(); // Check fileHandle after file is saved
     }
 }, { capture: false, passive: false });
+
+function darkMode(mode) {
+    const loadStyles = (url) => {
+        const link = document.createElement('link');
+        link.id = 'dark-mode';
+        link.type = 'text/css';
+        link.rel = 'stylesheet';
+        link.href = url;
+        document.head.appendChild(link);
+    }
+    const removeStyles = () => {
+        const link = document.getElementById('dark-mode');
+        if (link) {
+            link.remove();
+        }
+    }
+    // Adding the theme to the editor
+    if (mode === 'dark') {
+        loadStyles('/src/darkMode.css');
+        monaco.editor.setTheme('vs-dark');
+        localStorage.setItem('theme', 'dark');
+    }
+    if (mode === 'light') {
+        removeStyles();
+        monaco.editor.setTheme('vs');
+        localStorage.setItem('theme', 'light');
+    }
+};
+
+toggleButton.addEventListener('change', function () {
+    if (toggleButton.checked) {
+        darkMode('dark');
+    } else {
+        darkMode('light');
+    }
+});
+
+// Load the theme from the localstorage
+function loadTheme() {
+    var theme = localStorage.getItem('theme');
+    if (theme === 'dark') {
+        darkMode('dark');
+        toggleButton.checked = true;
+    }
+    else {
+        darkMode('light');
+        toggleButton.checked = false;
+    }
+};
+
+document.addEventListener('DOMContentLoaded', loadTheme);

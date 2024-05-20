@@ -1,0 +1,38 @@
+.row,
+.container,
+input[type="file"] {
+    background: #121212;
+}
+
+.column {
+    border: #3b3c3e;
+}
+
+#console {
+    background: #222222;
+    border: #3b3c3e;
+}
+
+input[type="file"] {
+    color: #fff;
+    border: 1px solid #3b3c3e;
+}
+
+input[type=file]::-webkit-file-upload-button,
+input[type=file]::file-selector-button {
+    background: #1f2021;
+    color: #fff;
+}
+
+input[type=file]:hover::-webkit-file-upload-button,
+input[type=file]:hover::file-selector-button {
+    background-color: #272a2c;
+}
+
+div.Buttons>button {
+    background: transparent;
+}
+
+div.Buttons>button:hover {
+    background: #272a2c;
+}
