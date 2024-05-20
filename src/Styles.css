@@ -125,6 +125,7 @@ body {
 
 .row {
     height: calc(100vh - 89px) !important;
+    background-color: transparent !important;
 }
 
 .playground {

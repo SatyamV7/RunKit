@@ -4,8 +4,8 @@
 // Names of the two caches used in this version of the service worker.
 // Change to v2, etc. when you update any of the local resources, which will
 // in turn trigger the install event again.
-const PRECACHE = 'Static_Cache v1.2.4-ProductionBuild';
-const RUNTIME = 'Dynamic_Cache v1.2.4-ProductionBuild';
+const PRECACHE = 'Static_Cache v1.2.5-ProductionBuild';
+const RUNTIME = 'Dynamic_Cache v1.2.5-ProductionBuild';
 
 // A list of local resources we always want to be cached.
 const PRECACHE_URLS = [
@@ -14,6 +14,7 @@ const PRECACHE_URLS = [
     'src/App.js',
     'favicon.ico',
     'src/Styles.css',
+    'src/darkMode.css',
     'src/ExecutorEngine.js',
     'assets/icons/icon_clear.png',
     'libs/monaco-editor@0.48.0/package/min/vs/loader.js',
