@@ -117,12 +117,6 @@ self.onmessage = function (event) {
         if (result !== undefined) {
             self.postMessage({ type: 'log', message: result, typeOf: typeof result });
         }
-        if (result === undefined) {
-            self.postMessage({ type: 'log', message: 'undefined', typeOf: 'undefined' });
-        }
-        if (result === '') {
-            self.postMessage({ type: 'log', message: '‎', typeOf: 'string' });
-        }
     } catch (error) {
         // Determine error type and post the error message back
         const errorType = error instanceof SyntaxError ? "Syntax Error" : "Runtime Error";
