@@ -401,13 +401,13 @@ toggleButton.addEventListener('change', function () {
 // Load the theme from the localstorage
 function loadTheme() {
     var theme = localStorage.getItem('theme');
-    if (theme === 'dark') {
-        darkMode('dark');
-        toggleButton.checked = true;
-    }
-    else {
+    if (theme === 'light') {
         darkMode('light');
         toggleButton.checked = false;
+    }
+    else {
+        darkMode('dark');
+        toggleButton.checked = true;
     }
 };
 
