@@ -63,3 +63,7 @@ div.Buttons>button:hover {
     background: inherit;
     border-radius: inherit;
 }
+
+.header>span:nth-child(1) {
+    filter: brightness(1.5);
+}
