@@ -40,6 +40,9 @@ self.onmessage = function (event) {
                 case 'string':
                     message = `'${arg}'`;
                     break;
+                case 'bigint':
+                    message = `${arg}n`;
+                    break;
                 default:
                     message = arg;
                     break;
@@ -117,7 +120,8 @@ self.onmessage = function (event) {
     try {
         self.postMessage({ executionStatus: 'executionStarted' }); // Notify that execution has started
 
-        const result = eval(`{ ${code}; undefined }`);
+        // Wrap the code in an IIFE to use setTimeout and setInterval
+        const result = eval(`(() => { ${code}; undefined })()`);
 
         // If the result is not undefined, post it back as a log message
         if (result !== undefined) {
