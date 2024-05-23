@@ -10,6 +10,7 @@ self.onmessage = function (event) {
     const consoleTimeEnd = console.timeEnd;
     const consoleAssert = console.assert;
     const consoleInfo = console.info;
+    const consoleClear = console.clear;
 
     // Object to store start times for console.time
     const timers = {};
@@ -108,10 +109,15 @@ self.onmessage = function (event) {
         self.postMessage({ type: 'info', message: args.join(' ') });
     };
 
+    // Override console.clear to clear the console
+    console.clear = () => {
+        self.postMessage({ type: 'clear' });
+    };
+
     try {
         self.postMessage({ executionStatus: 'executionStarted' }); // Notify that execution has started
 
-        const result = eval(code); // Evaluate the received code
+        const result = eval(`{ ${code}; undefined }`);
 
         // If the result is not undefined, post it back as a log message
         if (result !== undefined) {
@@ -131,6 +137,7 @@ self.onmessage = function (event) {
         console.timeEnd = consoleTimeEnd;
         console.assert = consoleAssert;
         console.info = consoleInfo;
+        console.clear = consoleClear;
 
         self.postMessage({ executionStatus: 'executionEnded' }); // Notify that execution has ended
     }
