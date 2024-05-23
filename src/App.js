@@ -44,6 +44,7 @@ var editor = monaco.editor.create(document.getElementById('editor'), {
     lineNumbersMinChars: 2,
     fontFamily: "JetBrains Mono",
     stickyScroll: { enabled: false },
+    fontLigatures: true,
 });
 
 // Adding Save & Save As button to the editor's conext menu
