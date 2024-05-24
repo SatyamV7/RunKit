@@ -121,7 +121,7 @@ self.onmessage = function (event) {
         self.postMessage({ executionStatus: 'executionStarted' }); // Notify that execution has started
 
         // Wrap the code in an IIFE to use setTimeout and setInterval
-        const result = eval(`(() => { ${code}; undefined })()`);
+        const result = (function () { eval(`(() => { ${code}; undefined })()`) })();
 
         // If the result is not undefined, post it back as a log message
         if (result !== undefined) {
@@ -133,15 +133,15 @@ self.onmessage = function (event) {
         self.postMessage({ type: 'error', message: `${errorType}: ${error.message}` });
     } finally {
         // Restore original console methods
-        console.log = consoleLog;
-        console.warn = consoleWarn;
-        console.error = consoleError;
-        console.time = consoleTime;
-        console.timeLog = consoleTimeLog;
-        console.timeEnd = consoleTimeEnd;
-        console.assert = consoleAssert;
-        console.info = consoleInfo;
-        console.clear = consoleClear;
+        // console.log = consoleLog;
+        // console.warn = consoleWarn;
+        // console.error = consoleError;
+        // console.time = consoleTime;
+        // console.timeLog = consoleTimeLog;
+        // console.timeEnd = consoleTimeEnd;
+        // console.assert = consoleAssert;
+        // console.info = consoleInfo;
+        // console.clear = consoleClear;
 
         self.postMessage({ executionStatus: 'executionEnded' }); // Notify that execution has ended
     }
