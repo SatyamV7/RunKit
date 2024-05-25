@@ -258,7 +258,8 @@ document.addEventListener('keydown', function (event) {
 
 // Save the code in the editor to a localstorage upon detecting a change in the editor
 window.editor.getModel().onDidChangeContent(() => {
-    localStorage.setItem('code', editor.getValue());
+    if (!fileHandle) localStorage.setItem('code', editor.getValue());
+    else checkFileHandleAndUpdateLocalStorage();
 });
 
 // Load the code from the localstorage
