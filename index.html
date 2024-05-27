@@ -81,9 +81,9 @@
     <script>
         // document.addEventListener('DOMContentLoaded', function () {
         setTimeout(function () {
-            document.querySelector('#splash-screen').remove();
-            document.querySelector('.container').style.visibility = 'visible';
-        }, 3000);
+            document.querySelector('#splash-screen').classList.add('disappear');
+            document.querySelector('.container').classList.add('reveal');
+        }, 3250);
         // });
         document.addEventListener('contextmenu', function (e) {
             e.preventDefault();

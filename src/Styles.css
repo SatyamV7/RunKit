@@ -132,7 +132,16 @@ body {
 .container {
     position: fixed;
     visibility: hidden;
-    animation: appear 0.75s ease-in-out 2.5s forwards;
+}
+
+.reveal {
+    animation: appear 0.375s ease-in-out forwards !important;
+    visibility: visible !important;
+}
+
+.disappear {
+    display: none !important;
+    animation: appear 0.375s ease-in-out reverse forwards !important;
 }
 
 .row {
