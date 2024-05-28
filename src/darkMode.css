@@ -46,7 +46,7 @@ div.Buttons>button:hover {
     left: 0;
     background: linear-gradient(-45deg, #ff3d00 0%, #0400ff 100%);
     transform: scale(1, 1);
-    filter: blur(20px);
+    filter: blur(25px);
     opacity: 0.75;
     transition: opacity 0.3s;
     border-radius: inherit;
