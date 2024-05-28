@@ -209,7 +209,6 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    box-shadow: 0 0 10px 3px #CF1512, 0 0 15px 5px #121FCF;
 }
 
 .moon,

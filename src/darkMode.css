@@ -67,3 +67,25 @@ div.Buttons>button:hover {
 .header>span:nth-child(1) {
     filter: brightness(1.5);
 }
+
+.checkbox-container {
+    background: linear-gradient(to right, #121FCF 0%, #CF1512 100%);
+    border-radius: 50px;
+    position: relative;
+}
+
+.checkbox-container::before {
+    width: 31px;
+    content: '';
+    z-index: -1;
+    position: absolute;
+    top: -4.5px;
+    right: 0;
+    bottom: 0;
+    left: -4.5px;
+    background: inherit;
+    border-radius: inherit;
+    filter: blur(3px);
+    height: 35px;
+    width: 64px;
+}
