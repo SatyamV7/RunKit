@@ -29,19 +29,57 @@ self.onmessage = function (event) {
         return formatted;
     }
 
+    function JavaScriptArray(arr) {
+        let formatted = '[';
+        for (let i = 0; i < arr.length; i++) {
+            let value = arr[i];
+            if (typeof value === 'string') {
+                value = `'${value}'`;
+            }
+            formatted += `${value}, `;
+        }
+        formatted = formatted.slice(0, -2) + ']';
+        return formatted;
+    }
+
+    function JavaScriptString(str) {
+        return `'${str}'`;
+    }
+
+    function JavaScriptNumber(num) {
+        return num;
+    }
+
+    function JavaScriptBoolean(bool) {
+        return bool;
+    }
+
+    function JavaScriptBigInt() {
+        return `${num}n`;
+    }
+
     console.log = (...args) => {
         consoleLog.apply(console, args);
         args.forEach(arg => {
             let message;
-            switch (typeof arg) {
-                case 'object':
+            switch (arg.constructor.name) {
+                case 'Array':
+                    message = JavaScriptArray(arg);
+                    break;
+                case 'Object':
                     message = JavaScriptObject(arg);
                     break;
-                case 'string':
-                    message = `'${arg}'`;
+                case 'String':
+                    message = JavaScriptString(arg);
                     break;
-                case 'bigint':
-                    message = `${arg}n`;
+                case 'BigInt':
+                    message = JavaScriptBigInt(arg);
+                    break;
+                case 'Number':
+                    message = JavaScriptNumber(arg);
+                    break;
+                case 'Boolean':
+                    message = JavaScriptBoolean(arg);
                     break;
                 default:
                     message = arg;
