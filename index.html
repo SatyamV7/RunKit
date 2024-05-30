@@ -10,6 +10,13 @@
         content="RunKit is a JavaScript playground which allows you to run and test your code natively in your browser.">
     <link rel="stylesheet" href="src/Styles.css">
     <title>RunKit</title>
+    <script>
+        let startTime = new Date();
+        document.addEventListener('DOMContentLoaded', function () {
+            let loadTime = new Date() - startTime;
+            console.log(`DOM Loaded in ${loadTime / 1000}s`);
+        });
+    </script>
 </head>
 
 <body>
