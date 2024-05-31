@@ -294,6 +294,7 @@ body {
 
 .monaco-editor {
     border-radius: 10px;
+    outline-color: transparent !important;
 }
 
 .monaco-editor .overflow-guard {
