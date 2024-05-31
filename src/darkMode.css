@@ -36,7 +36,7 @@ div.Buttons>button:hover {
     background: #272a2c;
 }
 
-.workplace::before {
+.Workspace::before {
     content: "";
     z-index: -1;
     position: absolute;
@@ -45,6 +45,8 @@ div.Buttons>button:hover {
     bottom: 0;
     left: 0;
     background: linear-gradient(-45deg, #ff3d00 0%, #0400ff 100%);
+    background-size: 150% 150%;
+    animation: gradient 15s ease infinite;
     transform: scale(1, 1);
     filter: blur(25px);
     opacity: 0.75;
@@ -52,7 +54,21 @@ div.Buttons>button:hover {
     border-radius: inherit;
 }
 
-.workplace::after {
+@keyframes gradient {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+.Workspace::after {
     content: "";
     z-index: -1;
     position: absolute;
