@@ -60,7 +60,7 @@ self.onmessage = function (event) {
 
     console.log = (...args) => {
         consoleLog.apply(console, args);
-        args.forEach(arg => {
+        let messages = args.map(arg => {
             let message;
             switch (arg.constructor.name) {
                 case 'Array':
@@ -85,8 +85,9 @@ self.onmessage = function (event) {
                     message = arg;
                     break;
             }
-            self.postMessage({ type: 'log', message: message, typeOf: typeof arg });
+            return message;
         });
+        self.postMessage({ type: 'log', message: messages.join(' ').replace(/' '/g, ' '), typeOf: typeof args });
     };
 
     // Override console.warn to also post messages back to the main thread
