@@ -28,7 +28,7 @@ const options = {
 
 // Initialize Monaco
 var editor = monaco.editor.create(document.getElementById('editor'), {
-    value: ['// Your JavaScript Code Here!'].join('\n'),
+    value: ['// Write your JavaScript code here!'].join('\n'),
     language: 'javascript',
     minimap: { enabled: false },
     acceptSuggestionOnEnter: 'smart',
@@ -278,7 +278,7 @@ function loadCode() {
         editor.setValue(localStorageCode);
     }
     else {
-        editor.setValue('// Write your JavaScript code here\n');
+        editor.setValue('// Write your JavaScript code here!\n');
     }
 };
 
@@ -316,7 +316,7 @@ function saveCodeToNewFile() {
 // Function to check fileHandle and update local storage
 function checkFileHandleAndUpdateLocalStorage() {
     if (fileHandle) {
-        localStorage.setItem('code', '// Write your JavaScript code here\n');
+        localStorage.setItem('code', '// Write your JavaScript code here!\n');
     }
 };
 
