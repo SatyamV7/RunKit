@@ -28,6 +28,18 @@ input[type=file]:hover::file-selector-button {
     background-color: #272a2c;
 }
 
+input[type=file]:focus {
+    color: #fff;
+    background: #1f2021;
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 .25rem rgba(13, 110, 253, .25);
+}
+
+input[type=file]:not(:focus) {
+    border: 1px solid #3b3c3e;
+    box-shadow: none;
+}
+
 div.Buttons>button {
     background: transparent;
 }

@@ -559,7 +559,18 @@ div.Buttons>button {
     left: calc(50vw - 118px);
 }
 
-div.Buttons>button:hover {
-    color: #0074f0;
-    background-color: #f5f5f5;
+div.Buttons>button:focus {
+    box-shadow: 0 0 0 .2rem #268fff80;
+}
+
+div.Buttons>button:active:focus {
+    box-shadow: 0 0 0 .2rem #268fff80;
+}
+
+div.buttons>button:not(:focus) {
+    box-shadow: 0 0 0 0.1rem #007bff;
+}
+
+div.Buttons>button:not(:active:focus) {
+    box-shadow: 0 0 0 0.1rem #007bff;
 }
