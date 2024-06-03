@@ -156,13 +156,15 @@ function logToConsole(message, type) {
     const messageElement = document.createElement('div');
     messageElement.classList.add('console-message', type);
     messageElement.textContent = message;
-    messageElement.addEventListener('long-press', function () {
+    function copyToClipoard() {
         navigator.clipboard.writeText(message).then(function () {
             alert('Copied to clipboard');
         }, function (err) {
             alert('Failed to copy: ' + err, 'error');
         });
-    });
+    }
+    messageElement.addEventListener('long-press', copyToClipoard);
+    messageElement.addEventListener('dblclick', copyToClipoard);
     consoleDiv.appendChild(messageElement);
     consoleDiv.scrollTop = consoleDiv.scrollHeight;
 };
