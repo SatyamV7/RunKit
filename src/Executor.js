@@ -5,12 +5,12 @@ self.onmessage = function (event) {
     const consoleLog = console.log;
     const consoleWarn = console.warn;
     const consoleError = console.error;
-    const consoleTime = console.time;
-    const consoleTimeLog = console.timeLog;
-    const consoleTimeEnd = console.timeEnd;
-    const consoleAssert = console.assert;
-    const consoleInfo = console.info;
-    const consoleClear = console.clear;
+    // const consoleTime = console.time;
+    // const consoleTimeLog = console.timeLog;
+    // const consoleTimeEnd = console.timeEnd;
+    // const consoleAssert = console.assert;
+    // const consoleInfo = console.info;
+    // const consoleClear = console.clear;
 
     // Object to store start times for console.time
     const timers = {};
@@ -93,13 +93,13 @@ self.onmessage = function (event) {
     // Override console.warn to also post messages back to the main thread
     console.warn = (...args) => {
         consoleWarn.apply(console, args);
-        self.postMessage({ type: 'warn', message: args.join(' ') });
+        self.postMessage({ type: 'warn', message: args.join(' ').replace(/' '/g, ' ') });
     };
 
     // Override console.error to also post messages back to the main thread
     console.error = (...args) => {
         consoleError.apply(console, args);
-        self.postMessage({ type: 'error', message: args.join(' ') });
+        self.postMessage({ type: 'error', message: args.join(' ').replace(/' '/g, ' ') });
     };
 
     // Override console.time to start a timer
@@ -139,7 +139,7 @@ self.onmessage = function (event) {
     // Override console.assert to log an error message if the assertion is false
     console.assert = (condition, ...args) => {
         if (!condition) {
-            const message = `Assertion failed: ${args.join(' ')}`;
+            const message = `Assertion failed: ${args.join(' '.replace(/' '/g, ' '))}`;
             consoleError.apply(console, [message]);
             self.postMessage({ type: 'error', message });
         }
@@ -148,7 +148,7 @@ self.onmessage = function (event) {
     // Override console.info to log an informational message
     console.info = (...args) => {
         consoleLog.apply(console, args); // Use console.log's underlying functionality
-        self.postMessage({ type: 'info', message: args.join(' ') });
+        self.postMessage({ type: 'info', message: args.join(' ').replace(/' '/g, ' ') });
     };
 
     // Override console.clear to clear the console
