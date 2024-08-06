@@ -43,7 +43,7 @@ self.onmessage = function (event) {
     }
 
     function JavaScriptString(str) {
-        return `'${str}'`;
+        return str;
     }
 
     function JavaScriptNumber(num) {
@@ -58,48 +58,58 @@ self.onmessage = function (event) {
         return `${num}n`;
     }
 
+    function masterMessageHandler(typeOfMessage, ...args) {
+        if (args.length === 1 && typeof args[0] === 'string') {
+            // Wrap the string in single quotes
+            return { type: typeOfMessage, message: `'${args[0]}'`, typeOf: 'string' };
+        } else {
+            // Process the arguments as before
+            let messages = args.map(arg => {
+                let message;
+                switch (arg.constructor.name) {
+                    case 'Array':
+                        message = JavaScriptArray(arg);
+                        break;
+                    case 'Object':
+                        message = JavaScriptObject(arg);
+                        break;
+                    case 'String':
+                        message = JavaScriptString(arg);
+                        break;
+                    case 'BigInt':
+                        message = JavaScriptBigInt(arg);
+                        break;
+                    case 'Number':
+                        message = JavaScriptNumber(arg);
+                        break;
+                    case 'Boolean':
+                        message = JavaScriptBoolean(arg);
+                        break;
+                    default:
+                        message = arg;
+                        break;
+                }
+                return message;
+            });
+            return { type: typeOfMessage, message: messages.join(' '), typeOf: typeof args };
+        }
+    }
+
     console.log = (...args) => {
         consoleLog.apply(console, args);
-        let messages = args.map(arg => {
-            let message;
-            switch (arg.constructor.name) {
-                case 'Array':
-                    message = JavaScriptArray(arg);
-                    break;
-                case 'Object':
-                    message = JavaScriptObject(arg);
-                    break;
-                case 'String':
-                    message = JavaScriptString(arg);
-                    break;
-                case 'BigInt':
-                    message = JavaScriptBigInt(arg);
-                    break;
-                case 'Number':
-                    message = JavaScriptNumber(arg);
-                    break;
-                case 'Boolean':
-                    message = JavaScriptBoolean(arg);
-                    break;
-                default:
-                    message = arg;
-                    break;
-            }
-            return message;
-        });
-        self.postMessage({ type: 'log', message: messages.join(' ').replace(/' '/g, ' '), typeOf: typeof args });
+        self.postMessage(masterMessageHandler('log', ...args));
     };
 
     // Override console.warn to also post messages back to the main thread
     console.warn = (...args) => {
         consoleWarn.apply(console, args);
-        self.postMessage({ type: 'warn', message: args.join(' ').replace(/' '/g, ' ') });
+        self.postMessage(masterMessageHandler('warn', ...args));
     };
 
     // Override console.error to also post messages back to the main thread
     console.error = (...args) => {
         consoleError.apply(console, args);
-        self.postMessage({ type: 'error', message: args.join(' ').replace(/' '/g, ' ') });
+        self.postMessage(masterMessageHandler('error', ...args));
     };
 
     // Override console.time to start a timer
@@ -139,7 +149,7 @@ self.onmessage = function (event) {
     // Override console.assert to log an error message if the assertion is false
     console.assert = (condition, ...args) => {
         if (!condition) {
-            const message = `Assertion failed: ${args.join(' '.replace(/' '/g, ' '))}`;
+            const message = `Assertion failed: ${args.join(' ')}`;
             consoleError.apply(console, [message]);
             self.postMessage({ type: 'error', message });
         }
@@ -148,7 +158,7 @@ self.onmessage = function (event) {
     // Override console.info to log an informational message
     console.info = (...args) => {
         consoleLog.apply(console, args); // Use console.log's underlying functionality
-        self.postMessage({ type: 'info', message: args.join(' ').replace(/' '/g, ' ') });
+        self.postMessage(masterMessageHandler('info', ...args));
     };
 
     // Override console.clear to clear the console
