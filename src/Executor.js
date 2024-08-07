@@ -15,13 +15,13 @@ self.onmessage = function (event) {
     // Object to store start times for console.time
     const timers = {};
 
-    // Override console.log to also post messages back to the main thread
+    // Formatting functions for different types
     function JavaScriptObject(obj) {
         let formatted = '{ ';
         for (let key in obj) {
             let value = obj[key];
             if (typeof value === 'string') {
-                value = `'${value}'`;
+                value = `'${JavaScriptString(value)}'`;
             }
             formatted += `${key}: ${value}, `;
         }
@@ -34,7 +34,7 @@ self.onmessage = function (event) {
         for (let i = 0; i < arr.length; i++) {
             let value = arr[i];
             if (typeof value === 'string') {
-                value = `'${value}'`;
+                value = `'${JavaScriptString(value)}'`;
             }
             formatted += `${value}, `;
         }
@@ -43,6 +43,38 @@ self.onmessage = function (event) {
     }
 
     function JavaScriptString(str) {
+        // Handle \\ first
+        str = str.replace(/\\\\/g, '\\');
+
+        // Handle common character escapes
+        str = str.replace(/\\'/g, '\'')
+            .replace(/\\"/g, '\"')
+            .replace(/\\n/g, '\n')
+            .replace(/\\r/g, '\r')
+            .replace(/\\t/g, '\t')
+            .replace(/\\b/g, '\b')
+            .replace(/\\f/g, '\f');
+
+        // Handle \uXXXX Unicode escapes
+        str = str.replace(/\\u([0-9A-Fa-f]{4})/g, (match, p1) => {
+            return String.fromCharCode(parseInt(p1, 16));
+        });
+
+        // Handle \u{XXXXX} Unicode escapes
+        str = str.replace(/\\u\{([0-9A-Fa-f]+)\}/g, (match, p1) => {
+            return String.fromCodePoint(parseInt(p1, 16));
+        });
+
+        // Handle \xXX hexadecimal escapes (if needed)
+        str = str.replace(/\\x([0-9A-Fa-f]{2})/g, (match, p1) => {
+            return String.fromCharCode(parseInt(p1, 16));
+        });
+
+        // Handle \XXX octal escapes (if needed)
+        str = str.replace(/\\([0-7]{1,3})/g, (match, p1) => {
+            return String.fromCharCode(parseInt(p1, 8));
+        });
+
         return str;
     }
 
@@ -58,6 +90,7 @@ self.onmessage = function (event) {
         return `${num}n`;
     }
 
+    // Master message handler to process different types of messages
     function masterMessageHandler(typeOfMessage, ...args) {
         if (args.length === 1 && typeof args[0] === 'string') {
             // Wrap the string in single quotes
@@ -95,6 +128,7 @@ self.onmessage = function (event) {
         }
     }
 
+    // Override console.log to also post messages back to the main thread
     console.log = (...args) => {
         consoleLog.apply(console, args);
         self.postMessage(masterMessageHandler('log', ...args));

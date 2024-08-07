@@ -107,6 +107,7 @@ function executeCode() {
     Executor.onmessage = function (event) {
         const { type, message, typeOf, executionStatus } = event.data;
         logToConsole(message, type);
+        console.log('Runkit Testing\n', message);
         if (type === 'clear') clearConsole();
         // If the worker has started executing the code, disable the runButton
         if (executionStatus === 'executionStarted') {
@@ -155,7 +156,7 @@ function logToConsole(message, type) {
     const consoleDiv = document.getElementById('console');
     const messageElement = document.createElement('div');
     messageElement.classList.add('console-message', type);
-    messageElement.textContent = message;
+    messageElement.innerHTML = message ? message.replace(/\n/g, '<br>') : '';
     function copyToClipoard() {
         navigator.clipboard.writeText(message).then(function () {
             alert('Copied to clipboard');
