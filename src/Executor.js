@@ -92,10 +92,10 @@ self.onmessage = function (event) {
 
     // Master message handler to process different types of messages
     function masterMessageHandler(typeOfMessage, ...args) {
-        if (args.length === 1 && typeof args[0] === 'string') {
-            // Wrap the string in single quotes
-            return { type: typeOfMessage, message: `'${args[0]}'`, typeOf: 'string' };
-        } else {
+        // if (args.length === 1 && typeof args[0] === 'string') {
+        //     // Wrap the string in single quotes
+        //     return { type: typeOfMessage, message: `'${args[0]}'`, typeOf: 'string' };
+        // } else {
             // Process the arguments as before
             let messages = args.map(arg => {
                 let message;
@@ -125,7 +125,7 @@ self.onmessage = function (event) {
                 return message;
             });
             return { type: typeOfMessage, message: messages.join(' '), typeOf: typeof args };
-        }
+        // }
     }
 
     // Override console.log to also post messages back to the main thread
