@@ -43,37 +43,37 @@ self.onmessage = function (event) {
     }
 
     function JavaScriptString(str) {
-        // Handle \\ first
-        str = str.replace(/\\\\/g, '\\');
+        // // Handle \\ first
+        // str = str.replace(/\\\\/g, '\\');
 
-        // Handle common character escapes
-        str = str.replace(/\\'/g, '\'')
-            .replace(/\\"/g, '\"')
-            .replace(/\\n/g, '\n')
-            .replace(/\\r/g, '\r')
-            .replace(/\\t/g, '\t')
-            .replace(/\\b/g, '\b')
-            .replace(/\\f/g, '\f');
+        // // Handle common character escapes
+        // str = str.replace(/\\'/g, '\'')
+        //     .replace(/\\"/g, '\"')
+        //     .replace(/\\n/g, '\n')
+        //     .replace(/\\r/g, '\r')
+        //     .replace(/\\t/g, '\t')
+        //     .replace(/\\b/g, '\b')
+        //     .replace(/\\f/g, '\f');
 
-        // Handle \uXXXX Unicode escapes
-        str = str.replace(/\\u([0-9A-Fa-f]{4})/g, (match, p1) => {
-            return String.fromCharCode(parseInt(p1, 16));
-        });
+        // // Handle \uXXXX Unicode escapes
+        // str = str.replace(/\\u([0-9A-Fa-f]{4})/g, (match, p1) => {
+        //     return String.fromCharCode(parseInt(p1, 16));
+        // });
 
-        // Handle \u{XXXXX} Unicode escapes
-        str = str.replace(/\\u\{([0-9A-Fa-f]+)\}/g, (match, p1) => {
-            return String.fromCodePoint(parseInt(p1, 16));
-        });
+        // // Handle \u{XXXXX} Unicode escapes
+        // str = str.replace(/\\u\{([0-9A-Fa-f]+)\}/g, (match, p1) => {
+        //     return String.fromCodePoint(parseInt(p1, 16));
+        // });
 
-        // Handle \xXX hexadecimal escapes (if needed)
-        str = str.replace(/\\x([0-9A-Fa-f]{2})/g, (match, p1) => {
-            return String.fromCharCode(parseInt(p1, 16));
-        });
+        // // Handle \xXX hexadecimal escapes (if needed)
+        // str = str.replace(/\\x([0-9A-Fa-f]{2})/g, (match, p1) => {
+        //     return String.fromCharCode(parseInt(p1, 16));
+        // });
 
-        // Handle \XXX octal escapes (if needed)
-        str = str.replace(/\\([0-7]{1,3})/g, (match, p1) => {
-            return String.fromCharCode(parseInt(p1, 8));
-        });
+        // // Handle \XXX octal escapes (if needed)
+        // str = str.replace(/\\([0-7]{1,3})/g, (match, p1) => {
+        //     return String.fromCharCode(parseInt(p1, 8));
+        // });
 
         return str;
     }
@@ -91,59 +91,59 @@ self.onmessage = function (event) {
     }
 
     // Master message handler to process different types of messages
-    function masterMessageHandler(typeOfMessage, ...args) {
+    function masterConsoleHandler(typeOfMessage, ...args) {
         // if (args.length === 1 && typeof args[0] === 'string') {
         //     // Wrap the string in single quotes
         //     return { type: typeOfMessage, message: `'${args[0]}'`, typeOf: 'string' };
         // } else {
-            // Process the arguments as before
-            let messages = args.map(arg => {
-                let message;
-                switch (arg.constructor.name) {
-                    case 'Array':
-                        message = JavaScriptArray(arg);
-                        break;
-                    case 'Object':
-                        message = JavaScriptObject(arg);
-                        break;
-                    case 'String':
-                        message = JavaScriptString(arg);
-                        break;
-                    case 'BigInt':
-                        message = JavaScriptBigInt(arg);
-                        break;
-                    case 'Number':
-                        message = JavaScriptNumber(arg);
-                        break;
-                    case 'Boolean':
-                        message = JavaScriptBoolean(arg);
-                        break;
-                    default:
-                        message = arg;
-                        break;
-                }
-                return message;
-            });
-            return { type: typeOfMessage, message: messages.join(' '), typeOf: typeof args };
+        // Process the arguments as before
+        let messages = args.map(arg => {
+            let message;
+            switch (arg.constructor.name) {
+                case 'Array':
+                    message = JavaScriptArray(arg);
+                    break;
+                case 'Object':
+                    message = JavaScriptObject(arg);
+                    break;
+                case 'String':
+                    message = JavaScriptString(arg);
+                    break;
+                case 'BigInt':
+                    message = JavaScriptBigInt(arg);
+                    break;
+                case 'Number':
+                    message = JavaScriptNumber(arg);
+                    break;
+                case 'Boolean':
+                    message = JavaScriptBoolean(arg);
+                    break;
+                default:
+                    message = arg;
+                    break;
+            }
+            return message;
+        });
+        return { type: typeOfMessage, message: messages.join(' '), typeOf: typeof args };
         // }
     }
 
     // Override console.log to also post messages back to the main thread
     console.log = (...args) => {
         consoleLog.apply(console, args);
-        self.postMessage(masterMessageHandler('log', ...args));
+        self.postMessage(masterConsoleHandler('log', ...args));
     };
 
     // Override console.warn to also post messages back to the main thread
     console.warn = (...args) => {
         consoleWarn.apply(console, args);
-        self.postMessage(masterMessageHandler('warn', ...args));
+        self.postMessage(masterConsoleHandler('warn', ...args));
     };
 
     // Override console.error to also post messages back to the main thread
     console.error = (...args) => {
         consoleError.apply(console, args);
-        self.postMessage(masterMessageHandler('error', ...args));
+        self.postMessage(masterConsoleHandler('error', ...args));
     };
 
     // Override console.time to start a timer
@@ -192,7 +192,7 @@ self.onmessage = function (event) {
     // Override console.info to log an informational message
     console.info = (...args) => {
         consoleLog.apply(console, args); // Use console.log's underlying functionality
-        self.postMessage(masterMessageHandler('info', ...args));
+        self.postMessage(masterConsoleHandler('info', ...args));
     };
 
     // Override console.clear to clear the console

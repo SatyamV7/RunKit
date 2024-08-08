@@ -355,13 +355,6 @@ function checkFileHandleAndUpdateLocalStorage() {
     saveCodeToFile();
 })();
 
-(function () {
-    function checkFileHandleAndUpdate() {
-        if (fileHandle) { checkFileHandleAndUpdateLocalStorage(); };
-    };
-    checkFileHandleAndUpdate();
-})();
-
 document.addEventListener('keydown', async function (event) {
     if (event.ctrlKey && event.key === 's') {
         event.preventDefault();
