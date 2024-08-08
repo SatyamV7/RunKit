@@ -107,7 +107,6 @@ function executeCode() {
     Executor.onmessage = function (event) {
         const { type, message, typeOf, executionStatus } = event.data;
         logToConsole(message, type);
-        console.log('Runkit Testing\n', message);
         if (type === 'clear') clearConsole();
         // If the worker has started executing the code, disable the runButton
         if (executionStatus === 'executionStarted') {
