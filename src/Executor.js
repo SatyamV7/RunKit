@@ -1,6 +1,8 @@
 self.onmessage = function (event) {
     const code = event.data; // The code to be evaluated is passed in event.data
 
+    performance.mark('executionStarted'); // Mark the start of execution
+
     // Store the original console methods
     const consoleLog = console.log;
     const consoleWarn = console.warn;
@@ -226,6 +228,8 @@ self.onmessage = function (event) {
         // console.info = consoleInfo;
         // console.clear = consoleClear;
 
-        self.postMessage({ executionStatus: 'executionEnded' }); // Notify that execution has ended
+        performance.mark('executionEnded'); // Mark the end of execution
+        performance.measure('Execution Time', 'executionStarted', 'executionEnded'); // Measure the execution time
+        self.postMessage({ executionStatus: 'executionEnded', executionTime: performance.getEntriesByName('Execution Time')[0].duration }); // Notify that execution has ended and post the execution time
     }
 };

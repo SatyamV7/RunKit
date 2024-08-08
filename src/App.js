@@ -105,7 +105,7 @@ function executeCode() {
     Executor = new Worker('/src/Executor.js');
     // Set up a message handler to receive the results
     Executor.onmessage = function (event) {
-        const { type, message, typeOf, executionStatus } = event.data;
+        const { type, message, typeOf, executionStatus, executionTime } = event.data;
         logToConsole(message, type);
         if (type === 'clear') clearConsole();
         // If the worker has started executing the code, disable the runButton
@@ -119,6 +119,8 @@ function executeCode() {
             isExecuting = false;
             runButton.disabled = false;
             stopButton.disabled = true;
+            console.clear();
+            console.log(`Execution Time: ${executionTime}ms`);
         }
     };
     // Send the code to the Executor for execution
