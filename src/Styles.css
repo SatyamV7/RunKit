@@ -198,7 +198,7 @@ body {
     position: absolute;
 }
 
-.checkbox-container{
+.checkbox-container {
     margin: 0 5px 0 0 !important;
 }
 
@@ -303,6 +303,13 @@ body {
 
 .monaco-editor .overflow-guard {
     border-radius: 10px
+}
+
+.monaco-editor .margin-view-overlays {
+    user-select: none;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
 }
 
 button {
