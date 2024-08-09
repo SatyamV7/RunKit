@@ -198,6 +198,10 @@ body {
     position: absolute;
 }
 
+.checkbox-container{
+    margin: 0 5px 0 0 !important;
+}
+
 .checkbox-label {
     background-color: #111;
     width: 55px;

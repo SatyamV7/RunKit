@@ -1,11 +1,14 @@
 // ServiceWorker V2
 // Made by @SatyamV7 <github.com/SatyamV7>
-// Licnsed under Apache Licnse V2
+// Licensed under Apache License V2
 // Names of the two caches used in this version of the service worker.
 // Change to v2, etc. when you update any of the local resources, which will
 // in turn trigger the install event again.
-const PRECACHE = 'Static_Cache v1.5.5-ProductionBuild';
-const RUNTIME = 'Dynamic_Cache v1.5.5-ProductionBuild';
+const PRECACHE = 'Static_Cache v1.5.6-ProductionBuild';
+const RUNTIME = 'Dynamic_Cache v1.5.6-ProductionBuild';
+
+// Flag to enable or disable caching
+const ENABLE_CACHING = true;
 
 // A list of local resources we always want to be cached.
 const PRECACHE_URLS = [
@@ -27,26 +30,30 @@ const PRECACHE_URLS = [
 // The install handler takes care of precaching the resources we always need.
 self.addEventListener('install', event => {
     console.log('service worker has been installed');
-    event.waitUntil(
-        caches.open(PRECACHE)
-            .then(cache => cache.addAll(PRECACHE_URLS))
-            .then(self.skipWaiting())
-    );
+    if (ENABLE_CACHING) {
+        event.waitUntil(
+            caches.open(PRECACHE)
+                .then(cache => cache.addAll(PRECACHE_URLS))
+                .then(self.skipWaiting())
+        );
+    }
 });
 
 // The activate handler takes care of cleaning up old caches.
 self.addEventListener('activate', event => {
     console.log('service worker has been activated');
-    const currentCaches = [PRECACHE, RUNTIME];
-    event.waitUntil(
-        caches.keys().then(cacheNames => {
-            return cacheNames.filter(cacheName => !currentCaches.includes(cacheName));
-        }).then(cachesToDelete => {
-            return Promise.all(cachesToDelete.map(cacheToDelete => {
-                return caches.delete(cacheToDelete);
-            }));
-        }).then(() => self.clients.claim())
-    );
+    if (ENABLE_CACHING) {
+        const currentCaches = [PRECACHE, RUNTIME];
+        event.waitUntil(
+            caches.keys().then(cacheNames => {
+                return cacheNames.filter(cacheName => !currentCaches.includes(cacheName));
+            }).then(cachesToDelete => {
+                return Promise.all(cachesToDelete.map(cacheToDelete => {
+                    return caches.delete(cacheToDelete);
+                }));
+            }).then(() => self.clients.claim())
+        );
+    }
 });
 
 // The fetch handler serves responses for same-origin resources from a cache.
@@ -54,8 +61,7 @@ self.addEventListener('activate', event => {
 // from the network before returning it to the page.
 self.addEventListener('fetch', event => {
     console.log('Fetch Event');
-    // Skip cross-origin requests, like those for Google Analytics.
-    if (event.request.url.startsWith(self.location.origin)) {
+    if (ENABLE_CACHING && event.request.url.startsWith(self.location.origin)) {
         event.respondWith(
             caches.match(event.request).then(cachedResponse => {
                 if (cachedResponse) {
