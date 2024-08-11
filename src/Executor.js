@@ -13,9 +13,15 @@ self.onmessage = function (event) {
     // const consoleAssert = console.assert;
     // const consoleInfo = console.info;
     // const consoleClear = console.clear;
+    // const consoleCount = console.count;
+    // const consoleCountReset = console.countReset;
+    // const consoleDebug = console.debug;
 
     // Object to store start times for console.time
     const timers = {};
+
+    // Object to store counts for console.count
+    const counts = {};
 
     // Formatting functions for different types
     function JavaScriptObject(obj) {
@@ -182,6 +188,29 @@ self.onmessage = function (event) {
         }
     };
 
+    // Override console.count to count the number of times console.count is called with a label
+    console.count = (label = 'default') => {
+        if (counts[label]) {
+            counts[label]++;
+        } else {
+            counts[label] = 1;
+        }
+        const message = `${label}: ${counts[label]}`;
+        consoleLog.apply(console, [message]);
+        self.postMessage({ type: 'log', message });
+    };
+
+    // Override console.countReset to reset the count for a label
+    console.countReset = (label = 'default') => {
+        if (counts[label]) {
+            counts[label] = 0;
+        } else {
+            const errorMessage = `No such label: ${label}`;
+            consoleError.apply(console, [errorMessage]);
+            self.postMessage({ type: 'error', message: errorMessage });
+        }
+    };
+
     // Override console.assert to log an error message if the assertion is false
     console.assert = (condition, ...args) => {
         if (!condition) {
@@ -195,6 +224,12 @@ self.onmessage = function (event) {
     console.info = (...args) => {
         consoleLog.apply(console, args); // Use console.log's underlying functionality
         self.postMessage(masterConsoleHandler('info', ...args));
+    };
+
+    // Override console.debug to log a debug message
+    console.debug = (...args) => {
+        consoleLog.apply(console, args); // Use console.log's underlying functionality
+        self.postMessage(masterConsoleHandler('debug', ...args));
     };
 
     // Override console.clear to clear the console
@@ -227,6 +262,8 @@ self.onmessage = function (event) {
         // console.assert = consoleAssert;
         // console.info = consoleInfo;
         // console.clear = consoleClear;
+        // console.count = consoleCount;
+        // console.countReset = consoleCountReset;
 
         performance.mark('executionEnded'); // Mark the end of execution
         performance.measure('Execution Time', 'executionStarted', 'executionEnded'); // Measure the execution time
