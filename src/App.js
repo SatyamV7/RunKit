@@ -56,11 +56,13 @@ var editor = monaco.editor.create(document.getElementById('editor'), {
 function ESM() {
     _ESM = !_ESM;
     localStorage.setItem('ESM', _ESM);
+    return _ESM;
 }
 
 function TSMode() {
     _TSMode = !_TSMode;
     localStorage.setItem('TS', _TSMode);
+    return _TSMode;
 }
 
 // Adding Save & Save As button to the editor's conext menu

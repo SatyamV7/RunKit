@@ -8,34 +8,29 @@ self.onmessage = function (event) {
     performance.mark('executionStarted'); // Mark the start of execution
 
     function ESMTranspile(code) {
+        // Babel imports for ES6 features
+        importScripts('../libs/babel/babel.min.js');
         // Transpile the code using Babel
-        transpiledCode = Babel.transform(code, {
+        return Babel.transform(code, {
             presets: ['env', 'es2015'], // Updated to use the correct preset name
             plugins: ['transform-modules-umd']
         }).code;
     }
 
     function TSTranspile(code) {
+        // Babel imports for TypeScript features
+        importScripts('../libs/babel/babel.min.js');
         // Transpile the code using Babel
-        transpiledCode = Babel.transform(code, {
+        return Babel.transform(code, {
             filename: 'script.ts',
             presets: ['typescript'],
             plugins: ['transform-modules-umd']
         }).code;
     }
 
-    if (ESM) {
-        // Babel imports for ES6 features
-        importScripts('../libs/babel/babel.min.js');
-        ESMTranspile(code);
-    } else if (TS) {
-        // Babel imports for TypeScript features
-        importScripts('../libs/babel/babel.min.js');
-        TSTranspile(code);
-    }
-    else {
-        transpiledCode = code;
-    }
+    if (ESM) transpiledCode = ESMTranspile(code);
+    else if (TS) transpiledCode = TSTranspile(code);
+    else transpiledCode = code;
 
     // Store the original console methods
     const consoleLog = console.log;
