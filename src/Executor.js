@@ -43,11 +43,15 @@ self.onmessage = function (event) {
     function JavaScriptObject(obj) {
         let formatted = '{ ';
         for (let key in obj) {
-            let value = obj[key];
-            if (typeof value === 'string') {
-                value = `'${JavaScriptString(value)}'`;
+            if (obj.hasOwnProperty(key)) {
+                let value = obj[key];
+                if (typeof value === 'string') {
+                    value = `'${JavaScriptString(value)}'`;
+                } else if (typeof value === 'object' && value !== null) {
+                    value = JavaScriptObject(value);
+                }
+                formatted += `${key}: ${value}, `;
             }
-            formatted += `${key}: ${value}, `;
         }
         formatted = formatted.slice(0, -2) + ' }';
         return formatted;
@@ -59,6 +63,8 @@ self.onmessage = function (event) {
             let value = arr[i];
             if (typeof value === 'string') {
                 value = `'${JavaScriptString(value)}'`;
+            } else if (Array.isArray(value)) {
+                value = JavaScriptArray(value);
             }
             formatted += `${value}, `;
         }
