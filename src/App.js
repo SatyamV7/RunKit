@@ -15,6 +15,8 @@ const toggleButton = document.querySelector('input[type="checkbox"]');
 
 let fileHandle;
 
+let ESM = false;
+
 const options = {
     types: [
         {
@@ -124,7 +126,7 @@ function executeCode() {
         }
     };
     // Send the code to the Executor for execution
-    Executor.postMessage(code);
+    Executor.postMessage({ code, ESM });
     Executor.onerror = function (error) {
         logToConsole('Worker Error: ' + error.message, 'error');
         isExecuting = false;

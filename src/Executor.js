@@ -1,7 +1,23 @@
 self.onmessage = function (event) {
-    const code = event.data; // The code to be evaluated is passed in event.data
+    const code = event.data.code; // The code to be evaluated is passed in event.dat
+    const ESM = event.data.ESM; // ES6 features to be transpiled
+
+    let transpiledCode;
 
     performance.mark('executionStarted'); // Mark the start of execution
+
+    if (ESM) {
+        // Babel imports for ES6 features
+        importScripts('../libs/babel/babel.min.js');
+        // Transpile the code using Babel
+        transpiledCode = Babel.transform(code, {
+            presets: ['env', 'es2015'], // Updated to use the correct preset name
+            plugins: ['transform-modules-umd']
+        }).code;
+    }
+    else {
+        transpiledCode = code;
+    }
 
     // Store the original console methods
     const consoleLog = console.log;
@@ -241,7 +257,7 @@ self.onmessage = function (event) {
         self.postMessage({ executionStatus: 'executionStarted' }); // Notify that execution has started
 
         // Wrap the code in an IIFE to use setTimeout and setInterval
-        const result = (function () { eval(`(() => { ${code}; undefined })()`) })();
+        const result = (function () { eval(`(() => { ${transpiledCode}; undefined })()`) })();
 
         // If the result is not undefined, post it back as a log message
         if (result !== undefined) {

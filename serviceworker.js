@@ -25,6 +25,7 @@ const PRECACHE_URLS = [
     'libs/monaco-editor@0.50.0/package/min/vs/editor/editor.main.nls.js',
     'libs/monaco-editor@0.50.0/package/min/vs/editor/editor.main.js',
     'assets/fonts/JetBrainsMono-Regular.woff2',
+    'libs/babel/babel.min.js',
 ];
 
 // The install handler takes care of precaching the resources we always need.
