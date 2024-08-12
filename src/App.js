@@ -15,7 +15,11 @@ const toggleButton = document.querySelector('input[type="checkbox"]');
 
 let fileHandle;
 
-let ESM = false;
+let _ESM = false;
+let _TSMode = false;
+
+localStorage.setItem('ESM', _ESM);
+localStorage.setItem('TS', _TSMode);
 
 const options = {
     types: [
@@ -31,7 +35,7 @@ const options = {
 // Initialize Monaco
 var editor = monaco.editor.create(document.getElementById('editor'), {
     value: ['// Write your JavaScript code here!'].join('\n'),
-    language: 'javascript',
+    language: localStorage.getItem('TS') ? 'typescript' : 'javascript',
     minimap: { enabled: false },
     acceptSuggestionOnEnter: 'smart',
     autoClosingBrackets: 'always',
@@ -48,6 +52,16 @@ var editor = monaco.editor.create(document.getElementById('editor'), {
     stickyScroll: { enabled: false },
     fontLigatures: true,
 });
+
+function ESM() {
+    _ESM = !_ESM;
+    localStorage.setItem('ESM', _ESM);
+}
+
+function TSMode() {
+    _TSMode = !_TSMode;
+    localStorage.setItem('TS', _TSMode);
+}
 
 // Adding Save & Save As button to the editor's conext menu
 
@@ -126,7 +140,7 @@ function executeCode() {
         }
     };
     // Send the code to the Executor for execution
-    Executor.postMessage({ code, ESM });
+    Executor.postMessage({ code, _ESM: localStorage.getItem('ESM'), _TSMode: localStorage.getItem('TS') });
     Executor.onerror = function (error) {
         logToConsole('Worker Error: ' + error.message, 'error');
         isExecuting = false;

@@ -1,19 +1,37 @@
 self.onmessage = function (event) {
     const code = event.data.code; // The code to be evaluated is passed in event.dat
     const ESM = event.data.ESM; // ES6 features to be transpiled
+    const TS = event.data._TSMode; // TypeScript features to be transpiled
 
     let transpiledCode;
 
     performance.mark('executionStarted'); // Mark the start of execution
 
-    if (ESM) {
-        // Babel imports for ES6 features
-        importScripts('../libs/babel/babel.min.js');
+    function ESMTranspile(code) {
         // Transpile the code using Babel
         transpiledCode = Babel.transform(code, {
             presets: ['env', 'es2015'], // Updated to use the correct preset name
             plugins: ['transform-modules-umd']
         }).code;
+    }
+
+    function TSTranspile(code) {
+        // Transpile the code using Babel
+        transpiledCode = Babel.transform(code, {
+            filename: 'script.ts',
+            presets: ['typescript'],
+            plugins: ['transform-modules-umd']
+        }).code;
+    }
+
+    if (ESM) {
+        // Babel imports for ES6 features
+        importScripts('../libs/babel/babel.min.js');
+        ESMTranspile(code);
+    } else if (TS) {
+        // Babel imports for TypeScript features
+        importScripts('../libs/babel/babel.min.js');
+        TSTranspile(code);
     }
     else {
         transpiledCode = code;
