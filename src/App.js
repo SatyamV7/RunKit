@@ -16,10 +16,7 @@ const toggleButton = document.querySelector('input[type="checkbox"]');
 let fileHandle;
 
 let _ESM = false;
-let _TSMode = false;
-
-localStorage.setItem('ESM', _ESM);
-localStorage.setItem('TS', _TSMode);
+let _TS = false;
 
 const options = {
     types: [
@@ -35,7 +32,7 @@ const options = {
 // Initialize Monaco
 var editor = monaco.editor.create(document.getElementById('editor'), {
     value: ['// Write your JavaScript code here!'].join('\n'),
-    language: localStorage.getItem('TS') ? 'typescript' : 'javascript',
+    language: 'javascript',
     minimap: { enabled: false },
     acceptSuggestionOnEnter: 'smart',
     autoClosingBrackets: 'always',
@@ -53,16 +50,20 @@ var editor = monaco.editor.create(document.getElementById('editor'), {
     fontLigatures: true,
 });
 
-function ESM() {
-    _ESM = !_ESM;
-    localStorage.setItem('ESM', _ESM);
+function ESM(state) {
+    state ? TS(false) : null;
+    _ESM = state;
     return _ESM;
 }
 
-function TSMode() {
-    _TSMode = !_TSMode;
-    localStorage.setItem('TS', _TSMode);
-    return _TSMode;
+function TS(state) {
+    state ? ESM(false) : null;
+    _TS = state;
+    (function (language = state ? 'typescript' : 'javascript') {
+        var model = editor.getModel();
+        monaco.editor.setModelLanguage(model, language);
+    })();
+    return _TS;
 }
 
 // Adding Save & Save As button to the editor's conext menu
@@ -137,12 +138,12 @@ function executeCode() {
             isExecuting = false;
             runButton.disabled = false;
             stopButton.disabled = true;
-            console.clear();
+            //console.clear();
             console.log(`Execution Time: ${executionTime}ms`);
         }
     };
     // Send the code to the Executor for execution
-    Executor.postMessage({ code, _ESM: localStorage.getItem('ESM'), _TSMode: localStorage.getItem('TS') });
+    Executor.postMessage({ code, ESM: _ESM, TS: _TS });
     Executor.onerror = function (error) {
         logToConsole('Worker Error: ' + error.message, 'error');
         isExecuting = false;
