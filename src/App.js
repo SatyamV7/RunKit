@@ -440,3 +440,5 @@ function loadTheme() {
 };
 
 document.addEventListener('DOMContentLoaded', loadTheme);
+
+document.querySelector('img[src="favicon.ico"]').addEventListener('dblclick', TS(!_TS));
