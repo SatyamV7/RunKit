@@ -257,6 +257,7 @@ body {
     font-size: 14px;
     font-weight: 500;
     display: flex;
+    min-height: 34px;
     justify-content: space-between;
     font-family: JetBrainsMono, 'Courier New', Courier, monospace;
     align-items: center;

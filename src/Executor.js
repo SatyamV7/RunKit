@@ -50,6 +50,9 @@ self.onmessage = function (event) {
     // Object to store counts for console.count
     const counts = {};
 
+    // Counter to store group level for console.group
+    let level = 0;
+
     // Formatting functions for different types
     function JavaScriptObject(obj) {
         let formatted = '{ ';
@@ -84,37 +87,37 @@ self.onmessage = function (event) {
     }
 
     function JavaScriptString(str) {
-        // // Handle \\ first
-        // str = str.replace(/\\\\/g, '\\');
+        // Handle \\ first
+        str = str.replace(/\\\\/g, '\u005C'); // Backslash
 
-        // // Handle common character escapes
-        // str = str.replace(/\\'/g, '\'')
-        //     .replace(/\\"/g, '\"')
-        //     .replace(/\\n/g, '\n')
-        //     .replace(/\\r/g, '\r')
-        //     .replace(/\\t/g, '\t')
-        //     .replace(/\\b/g, '\b')
-        //     .replace(/\\f/g, '\f');
+        // Handle common character escapes
+        str = str.replace(/\\'/g, '\'')
+            .replace(/\\"/g, '\u0022')  // Double Quote
+            .replace(/\\n/g, '\u000A')  // Line Feed
+            .replace(/\\r/g, '\u000D')  // Carriage Return
+            .replace(/\\t/g, '\u0009')  // Horizontal Tab
+            .replace(/\\b/g, '\u0008')  // Backspace
+            .replace(/\\f/g, '\u000C'); // Form Feed
 
-        // // Handle \uXXXX Unicode escapes
-        // str = str.replace(/\\u([0-9A-Fa-f]{4})/g, (match, p1) => {
-        //     return String.fromCharCode(parseInt(p1, 16));
-        // });
+        // Handle \uXXXX Unicode escapes
+        str = str.replace(/\\u([0-9A-Fa-f]{4})/g, (match, p1) => {
+            return String.fromCharCode(parseInt(p1, 16));
+        });
 
-        // // Handle \u{XXXXX} Unicode escapes
-        // str = str.replace(/\\u\{([0-9A-Fa-f]+)\}/g, (match, p1) => {
-        //     return String.fromCodePoint(parseInt(p1, 16));
-        // });
+        // Handle \u{XXXXX} Unicode escapes
+        str = str.replace(/\\u\{([0-9A-Fa-f]+)\}/g, (match, p1) => {
+            return String.fromCodePoint(parseInt(p1, 16));
+        });
 
-        // // Handle \xXX hexadecimal escapes (if needed)
-        // str = str.replace(/\\x([0-9A-Fa-f]{2})/g, (match, p1) => {
-        //     return String.fromCharCode(parseInt(p1, 16));
-        // });
+        // Handle \xXX hexadecimal escapes (if needed)
+        str = str.replace(/\\x([0-9A-Fa-f]{2})/g, (match, p1) => {
+            return String.fromCharCode(parseInt(p1, 16));
+        });
 
-        // // Handle \XXX octal escapes (if needed)
-        // str = str.replace(/\\([0-7]{1,3})/g, (match, p1) => {
-        //     return String.fromCharCode(parseInt(p1, 8));
-        // });
+        // Handle \XXX octal escapes (if needed)
+        str = str.replace(/\\([0-7]{1,3})/g, (match, p1) => {
+            return String.fromCharCode(parseInt(p1, 8));
+        });
 
         return str;
     }
@@ -164,8 +167,9 @@ self.onmessage = function (event) {
                     break;
             }
             return message;
-        });
-        return { type: typeOfMessage, message: messages.join(' '), typeOf: typeof args };
+        }).join(' ');
+        messages = '\u00A0'.repeat(level) + messages.replace(/\u000A/g, '\u000A' + '\u00A0'.repeat(level));
+        return { type: typeOfMessage, message: messages, typeOf: typeof args };
         // }
     }
 
@@ -263,6 +267,21 @@ self.onmessage = function (event) {
     console.debug = (...args) => {
         consoleLog.apply(console, args); // Use console.log's underlying functionality
         self.postMessage(masterConsoleHandler('debug', ...args));
+    };
+
+    // Override console.group to log indented message
+    console.group = () => {
+        level++
+    };
+
+    // Override console.groupEnd to reduce indentation level
+    console.groupEnd = () => {
+        level--
+    };
+
+    // Override console.groupCollapsed to log indented message
+    console.groupCollapsed = () => {
+        level++
     };
 
     // Override console.clear to clear the console
