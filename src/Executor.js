@@ -61,6 +61,8 @@ self.onmessage = function (event) {
                 let value = obj[key];
                 if (typeof value === 'string') {
                     value = `'${JavaScriptString(value)}'`;
+                } else if (Array.isArray(value)) {
+                    value = JavaScriptArray(value);
                 } else if (typeof value === 'object' && value !== null) {
                     value = JavaScriptObject(value);
                 }
@@ -79,6 +81,8 @@ self.onmessage = function (event) {
                 value = `'${JavaScriptString(value)}'`;
             } else if (Array.isArray(value)) {
                 value = JavaScriptArray(value);
+            } else if (typeof value === 'object' && value !== null) {
+                value = JavaScriptObject(value);
             }
             formatted += `${value}, `;
         }
@@ -87,35 +91,32 @@ self.onmessage = function (event) {
     }
 
     function JavaScriptString(str) {
-        // Handle \\ first
-        str = str.replace(/\\\\/g, '\u005C'); // Backslash
-
-        // Handle common character escapes
-        str = str.replace(/\\'/g, '\'')
-            .replace(/\\"/g, '\u0022')  // Double Quote
-            .replace(/\\n/g, '\u000A')  // Line Feed
-            .replace(/\\r/g, '\u000D')  // Carriage Return
-            .replace(/\\t/g, '\u0009')  // Horizontal Tab
-            .replace(/\\b/g, '\u0008')  // Backspace
-            .replace(/\\f/g, '\u000C'); // Form Feed
+        str = str
+            .replace(/\\/g, '\\') // Backslash
+            .replace(/\'/g, '\'') // Single quote
+            .replace(/\"/g, '\"') // Double quote
+            .replace(/\n/g, '\n') // Newline
+            .replace(/\r/g, '\r') // Carriage return
+            .replace(/\t/g, '\t')// Tab
+        // .replace(/\t/g, '\u00A0\u00A0\u00A0\u00A0'); // Tab Modification (tab --> 4 spaces)
 
         // Handle \uXXXX Unicode escapes
-        str = str.replace(/\\u([0-9A-Fa-f]{4})/g, (match, p1) => {
+        str = str.replace(/\u([0-9A-Fa-f]{4})/g, (match, p1) => {
             return String.fromCharCode(parseInt(p1, 16));
         });
 
         // Handle \u{XXXXX} Unicode escapes
-        str = str.replace(/\\u\{([0-9A-Fa-f]+)\}/g, (match, p1) => {
+        str = str.replace(/\u\{([0-9A-Fa-f]+)\}/g, (match, p1) => {
             return String.fromCodePoint(parseInt(p1, 16));
         });
 
         // Handle \xXX hexadecimal escapes (if needed)
-        str = str.replace(/\\x([0-9A-Fa-f]{2})/g, (match, p1) => {
+        str = str.replace(/\x([0-9A-Fa-f]{2})/g, (match, p1) => {
             return String.fromCharCode(parseInt(p1, 16));
         });
 
         // Handle \XXX octal escapes (if needed)
-        str = str.replace(/\\([0-7]{1,3})/g, (match, p1) => {
+        str = str.replace(/\([0-7]{1,3}\)/g, (match, p1) => {
             return String.fromCharCode(parseInt(p1, 8));
         });
 
@@ -282,6 +283,50 @@ self.onmessage = function (event) {
     // Override console.groupCollapsed to log indented message
     console.groupCollapsed = () => {
         level++
+    };
+
+    // Override console.dir to log an object with its properties
+    console.dir = (obj) => {
+        function directoryStructure(obj, indentLevel = 0) {
+            let indent = '\u00A0'.repeat(indentLevel * 4); // 4 spaces per level
+            let formatted = '';
+            if (typeof obj === 'object' && obj !== null) {
+                if (Array.isArray(obj)) {
+                    // Format arrays properly
+                    formatted += JavaScriptArray(obj);
+                } else {
+                    // Regular object, format its properties
+                    formatted += 'Object'; // No newline after Object
+                    let isFirstProperty = true;
+                    for (let key in obj) {
+                        if (obj.hasOwnProperty(key)) {
+                            if (isFirstProperty) {
+                                formatted += '\n'; // Add newline after the first property
+                                isFirstProperty = false;
+                            }
+                            let value = obj[key];
+                            if (typeof value === 'object' && value !== null) {
+                                formatted += `${indent}${key}: ${directoryStructure(value, indentLevel + 1)}\n`;
+                            } else if (typeof value === 'function') {
+                                formatted += `${indent}${key}: ${value.toString()}\n`;
+                            } else if (typeof value === 'string') {
+                                formatted += `${indent}${key}: "${value}"\n`;
+                            } else {
+                                formatted += `${indent}${key}: ${value}\n`;
+                            }
+                        }
+                    }
+                    formatted = formatted.trim(); // Avoid trailing newlines
+                }
+            } else {
+                // Fallback for non-object types
+                formatted += String(obj);
+            }
+            return formatted.trim(); // Avoid trailing newlines
+        }
+        const output = directoryStructure(obj);
+        consoleLog.apply(console, [output]); // Use the original console.log to print
+        self.postMessage({ type: 'log', message: output }); // Post message back to the main thread
     };
 
     // Override console.clear to clear the console

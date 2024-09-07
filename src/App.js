@@ -175,20 +175,22 @@ stopButton.addEventListener('click', stopExecution);
 function logToConsole(message, type) {
     const consoleDiv = document.getElementById('console');
     const messageElement = document.createElement('div');
+    const messagePreElement = document.createElement('pre');
     messageElement.classList.add('console-message', type);
-    messageElement.innerHTML = message ? message.replace(/\n/g, '<br>') : '';
-    function copyToClipoard() {
+    messagePreElement.innerHTML = message;
+    function copyToClipboard() {
         navigator.clipboard.writeText(message).then(function () {
             alert('Copied to clipboard');
         }, function (err) {
             alert('Failed to copy: ' + err, 'error');
         });
     }
-    messageElement.addEventListener('long-press', copyToClipoard);
-    messageElement.addEventListener('dblclick', copyToClipoard);
+    messageElement.addEventListener('long-press', copyToClipboard);
+    messageElement.addEventListener('dblclick', copyToClipboard);
+    messageElement.appendChild(messagePreElement);
     consoleDiv.appendChild(messageElement);
     consoleDiv.scrollTop = consoleDiv.scrollHeight;
-};
+}
 
 // Function to clear all console messages
 function clearConsole() {
