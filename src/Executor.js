@@ -169,7 +169,7 @@ self.onmessage = function (event) {
             }
             return message;
         }).join(' ');
-        messages = '\u00A0'.repeat(level) + messages.replace(/\u000A/g, '\u000A' + '\u00A0'.repeat(level));
+        messages = '\u00A0'.repeat(level * 2) + messages.replace(/\u000A/g, '\u000A' + '\u00A0'.repeat(level * 2));
         return { type: typeOfMessage, message: messages, typeOf: typeof args };
         // }
     }
