@@ -30,6 +30,7 @@ html {
     border-width: 0px 7px 0px 7px;
     border-style: solid;
     border-color: transparent;
+    min-height: 100px;
 }
 
 ::-webkit-scrollbar-track {
