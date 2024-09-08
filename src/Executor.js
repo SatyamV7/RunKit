@@ -30,20 +30,6 @@ self.onmessage = function (event) {
     else if (TS === true) transpiledCode = TSTranspile(code);
     else transpiledCode = code;
 
-    // Store the original console methods
-    const consoleLog = console.log;
-    const consoleWarn = console.warn;
-    const consoleError = console.error;
-    // const consoleTime = console.time;
-    // const consoleTimeLog = console.timeLog;
-    // const consoleTimeEnd = console.timeEnd;
-    // const consoleAssert = console.assert;
-    // const consoleInfo = console.info;
-    // const consoleClear = console.clear;
-    // const consoleCount = console.count;
-    // const consoleCountReset = console.countReset;
-    // const consoleDebug = console.debug;
-
     // Object to store start times for console.time
     const timers = {};
 
@@ -176,19 +162,16 @@ self.onmessage = function (event) {
 
     // Override console.log to also post messages back to the main thread
     console.log = (...args) => {
-        consoleLog.apply(console, args);
         self.postMessage(masterConsoleHandler('log', ...args));
     };
 
     // Override console.warn to also post messages back to the main thread
     console.warn = (...args) => {
-        consoleWarn.apply(console, args);
         self.postMessage(masterConsoleHandler('warn', ...args));
     };
 
     // Override console.error to also post messages back to the main thread
     console.error = (...args) => {
-        consoleError.apply(console, args);
         self.postMessage(masterConsoleHandler('error', ...args));
     };
 
@@ -202,11 +185,9 @@ self.onmessage = function (event) {
         if (timers[label]) {
             const elapsed = performance.now() - timers[label];
             const message = `${label}: ${+elapsed.toFixed(3)}ms`;
-            consoleLog.apply(console, [message, ...args]);
             self.postMessage({ type: 'log', message: [message, ...args].join(' ') });
         } else {
             const errorMessage = `No such label: ${label}`;
-            consoleError.apply(console, [errorMessage]);
             self.postMessage({ type: 'error', message: errorMessage });
         }
     };
@@ -216,12 +197,10 @@ self.onmessage = function (event) {
         if (timers[label]) {
             const elapsed = performance.now() - timers[label];
             const message = `${label}: ${+elapsed.toFixed(3)}ms - timer ended`;
-            consoleLog.apply(console, [message, ...args]);
             self.postMessage({ type: 'log', message: [message, ...args].join(' ') });
             delete timers[label]; // Remove the timer
         } else {
             const errorMessage = `No such label: ${label}`;
-            consoleError.apply(console, [errorMessage]);
             self.postMessage({ type: 'error', message: errorMessage });
         }
     };
@@ -234,7 +213,6 @@ self.onmessage = function (event) {
             counts[label] = 1;
         }
         const message = `${label}: ${counts[label]}`;
-        consoleLog.apply(console, [message]);
         self.postMessage({ type: 'log', message });
     };
 
@@ -244,7 +222,6 @@ self.onmessage = function (event) {
             counts[label] = 0;
         } else {
             const errorMessage = `No such label: ${label}`;
-            consoleError.apply(console, [errorMessage]);
             self.postMessage({ type: 'error', message: errorMessage });
         }
     };
@@ -253,20 +230,17 @@ self.onmessage = function (event) {
     console.assert = (condition, ...args) => {
         if (!condition) {
             const message = `Assertion failed: ${args.join(' ')}`;
-            consoleError.apply(console, [message]);
             self.postMessage({ type: 'error', message });
         }
     };
 
     // Override console.info to log an informational message
     console.info = (...args) => {
-        consoleLog.apply(console, args); // Use console.log's underlying functionality
         self.postMessage(masterConsoleHandler('info', ...args));
     };
 
     // Override console.debug to log a debug message
     console.debug = (...args) => {
-        consoleLog.apply(console, args); // Use console.log's underlying functionality
         self.postMessage(masterConsoleHandler('debug', ...args));
     };
 
@@ -325,8 +299,57 @@ self.onmessage = function (event) {
             return formatted.trim(); // Avoid trailing newlines
         }
         const output = directoryStructure(obj);
-        consoleLog.apply(console, [output]); // Use the original console.log to print
         self.postMessage({ type: 'log', message: output }); // Post message back to the main thread
+    };
+
+    // Override console.table to log an array/object of objects as a table
+    // Warning: This implementation is not perfect and may not work in all cases (especially with nested objects/arrays)
+    // Otherwise, it should work for most simple cases
+    // This implementation will be improved in the future for senarios where the data is more complex (e.g. nested objects/arrays)
+    console.table = (data) => {
+        if (!data || (typeof data !== 'object')) {
+            console.error('Provided data is not an object or array');
+            return;
+        }
+        // Function to create an ASCII-style table for arrays and objects
+        const createTable = (data) => {
+            let output = "";
+            let headers;
+            let rows;
+            // Handle Arrays
+            if (Array.isArray(data)) {
+                headers = ['(index)', 'Value'];
+                rows = data.map((value, index) => [index, value]);
+            }
+            // Handle Objects
+            else {
+                headers = ['(index)', 'Value'];
+                rows = Object.entries(data);
+            }
+            // Calculate maximum length for each column
+            const maxLengths = headers.map((header, index) => Math.max(header.length, ...rows.map(row => String(row[index]).length)));
+            const border = (header) => `╔${header.map((_, index) => '═'.repeat(maxLengths[index] + 2)).join('╦')}╗\n`;
+            const rowSeparator = (header) => `╠${header.map((_, index) => '═'.repeat(maxLengths[index] + 2)).join('╬')}╣\n`;
+            const footer = (header) => `╚${header.map((_, index) => '═'.repeat(maxLengths[index] + 2)).join('╩')}╝\n`;
+            const createRow = (row) => {
+                return `║ ${row.map((value, index) => `${value}`.padEnd(maxLengths[index], ' ')).join(' ║ ')} ║\n`;
+            };
+            // Build the table with row partitions
+            output += border(headers);
+            output += createRow(headers);
+            output += rowSeparator(headers);
+            rows.forEach((row, i) => {
+                output += createRow(row);
+                if (i < rows.length - 1) {
+                    output += rowSeparator(headers);
+                }
+            });
+            output += footer(headers);
+            return output;
+        };
+        // Generate the table and post it back to the main thread
+        const table = createTable(data);
+        self.postMessage({ type: 'log', message: table }); // Post message back to the main thread
     };
 
     // Override console.clear to clear the console
@@ -349,19 +372,6 @@ self.onmessage = function (event) {
         const errorType = error instanceof SyntaxError ? "Syntax Error" : "Runtime Error";
         self.postMessage({ type: 'error', message: `${errorType}: ${error.message}` });
     } finally {
-        // Restore original console methods
-        // console.log = consoleLog;
-        // console.warn = consoleWarn;
-        // console.error = consoleError;
-        // console.time = consoleTime;
-        // console.timeLog = consoleTimeLog;
-        // console.timeEnd = consoleTimeEnd;
-        // console.assert = consoleAssert;
-        // console.info = consoleInfo;
-        // console.clear = consoleClear;
-        // console.count = consoleCount;
-        // console.countReset = consoleCountReset;
-
         performance.mark('executionEnded'); // Mark the end of execution
         performance.measure('Execution Time', 'executionStarted', 'executionEnded'); // Measure the execution time
         self.postMessage({ executionStatus: 'executionEnded', executionTime: performance.getEntriesByName('Execution Time')[0].duration }); // Notify that execution has ended and post the execution time

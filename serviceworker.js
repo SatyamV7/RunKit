@@ -4,8 +4,8 @@
 // Names of the two caches used in this version of the service worker.
 // Change to v2, etc. when you update any of the local resources, which will
 // in turn trigger the install event again.
-const PRECACHE = 'Static_Cache v1.6.9-ProductionBuild';
-const RUNTIME = 'Dynamic_Cache v1.6.9-ProductionBuild';
+const PRECACHE = 'Static_Cache v1.7.0-BetaBuild';
+const RUNTIME = 'Dynamic_Cache v1.7.0-BetaBuild';
 
 // Flag to enable or disable caching
 const ENABLE_CACHING = true;
