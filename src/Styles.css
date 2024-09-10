@@ -27,7 +27,7 @@ html {
     display: block;
     background: #495670;
     background-clip: padding-box;
-    border-width: 0px 7px 0px 7px;
+    border-width: 20px 7px 20px 7px;
     border-style: solid;
     border-color: transparent;
     min-height: 100px;
