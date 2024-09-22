@@ -1,5 +1,5 @@
 self.onmessage = function (event) {
-    const { code, ESM, TS } = event.data;
+    const { code, ESM, TS, maxEnvLnLen } = event.data;
 
     performance.mark('executionStarted'); // Mark the start of execution
 
@@ -38,6 +38,54 @@ self.onmessage = function (event) {
 
     // Counter to store group level for console.group
     let level = 0;
+
+    // Function to wrap text to a maximum line length
+    function wrapText(text, maxLineLength = maxEnvLnLen) {
+        if (!text || maxLineLength < 1) return text;
+        const lines = [];
+        const paragraphs = text.split(/(\n+)/); // Split by newlines, preserving them
+        const newlines = [];
+        const leadingNewlinesAndWhiteSpaces = text.match(/^[ ]*\n+/) || text.match(/^\n+/); // Capture spaces before newlines or newlines
+        const trailingNewlinesAndWhiteSpaces = text.match(/\n[ ]*$/) || text.match(/\n+$/); // Capture spaces after newlines or newlines
+        // Store number of newlines encountered between paragraphs
+        for (let i = 0; i < paragraphs.length; i++) {
+            const part = paragraphs[i];
+            if (part.match(/^\n+$/)) {
+                newlines.push(part.length); // Track newlines
+            } else {
+                newlines.push(0); // No newline, just content
+            }
+        }
+        // Process each paragraph separately
+        for (let i = 0; i < paragraphs.length; i++) {
+            const paragraph = paragraphs[i];
+            // Preserve leading newlines (use empty string for first chunk to avoid starting with a newline)
+            if (i === 0 && newlines[0] > 0) {
+                lines.push('\n'.repeat(newlines[0]));
+            }
+            if (paragraph.match(/^\n+$/)) continue; // Skip newlines, already tracked
+            const words = paragraph.split(/(\s+)/); // Split by spaces, preserving spaces
+            let currentLine = '';
+            let indent = paragraph.match(/^\s*/)[0]; // Detect and preserve indentation
+            for (const word of words) {
+                // Check if adding the word exceeds the max line length
+                if (currentLine.length + word.length > maxLineLength) {
+                    lines.push(currentLine); // Push current line to the array
+                    currentLine = indent + word.trim(); // Start a new line with the current word and indent
+                } else {
+                    currentLine += word; // Append word to current line
+                }
+            }
+            if (currentLine.trim()) {
+                lines.push(currentLine); // Push last line
+            }
+            // Add the correct number of newlines between paragraphs
+            if (i < newlines.length - 1 && newlines[i + 1] > 0 && newlines[i + 1] - 2 >= 0) {
+                lines.push('\n'.repeat(newlines[i + 1] - 2));
+            }
+        }
+        return `${leadingNewlinesAndWhiteSpaces ? leadingNewlinesAndWhiteSpaces[0] : ''}${lines.join('\n')}${trailingNewlinesAndWhiteSpaces ? trailingNewlinesAndWhiteSpaces[0] : ''}`;
+    }
 
     // Formatting functions for different types
     function JavaScriptObject(obj) {
@@ -156,7 +204,7 @@ self.onmessage = function (event) {
             return message;
         }).join(' ');
         messages = '\u00A0'.repeat(level * 2) + messages.replace(/\u000A/g, '\u000A' + '\u00A0'.repeat(level * 2));
-        return { type: typeOfMessage, message: messages, typeOf: typeof args };
+        return { type: typeOfMessage, message: wrapText(messages), typeOf: typeof args };
         // }
     }
 
@@ -188,7 +236,7 @@ self.onmessage = function (event) {
             self.postMessage({ type: 'log', message: [message, ...args].join(' ') });
         } else {
             const errorMessage = `No such label: ${label}`;
-            self.postMessage({ type: 'error', message: errorMessage });
+            self.postMessage({ type: 'error', message: wrapText(errorMessage) });
         }
     };
 
@@ -201,7 +249,7 @@ self.onmessage = function (event) {
             delete timers[label]; // Remove the timer
         } else {
             const errorMessage = `No such label: ${label}`;
-            self.postMessage({ type: 'error', message: errorMessage });
+            self.postMessage({ type: 'error', message: wrapText(errorMessage) });
         }
     };
 
@@ -213,7 +261,7 @@ self.onmessage = function (event) {
             counts[label] = 1;
         }
         const message = `${label}: ${counts[label]}`;
-        self.postMessage({ type: 'log', message });
+        self.postMessage({ type: 'log', message: wrapText(message) });
     };
 
     // Override console.countReset to reset the count for a label
@@ -222,7 +270,7 @@ self.onmessage = function (event) {
             counts[label] = 0;
         } else {
             const errorMessage = `No such label: ${label}`;
-            self.postMessage({ type: 'error', message: errorMessage });
+            self.postMessage({ type: 'error', message: wrapText(errorMessage) });
         }
     };
 
@@ -230,7 +278,7 @@ self.onmessage = function (event) {
     console.assert = (condition, ...args) => {
         if (!condition) {
             const message = `Assertion failed: ${args.join(' ')}`;
-            self.postMessage({ type: 'error', message });
+            self.postMessage({ type: 'error', message: wrapText(message) });
         }
     };
 
@@ -299,7 +347,7 @@ self.onmessage = function (event) {
             return formatted.trim(); // Avoid trailing newlines
         }
         const output = directoryStructure(obj);
-        self.postMessage({ type: 'log', message: output }); // Post message back to the main thread
+        self.postMessage({ type: 'log', message: wrapText(output) }); // Post message back to the main thread
     };
 
     // Override console.table to log an array/object of objects as a table
@@ -345,6 +393,8 @@ self.onmessage = function (event) {
                 }
             });
             output += footer(headers);
+            // Check if the total length exceeds 113 characters
+            if (output.indexOf('\n', 0) > 113) { }
             return output;
         };
         // Generate the table and post it back to the main thread
@@ -365,12 +415,12 @@ self.onmessage = function (event) {
 
         // If the result is not undefined, post it back as a log message
         if (result !== undefined) {
-            self.postMessage({ type: 'log', message: result, typeOf: typeof result });
+            self.postMessage({ type: 'log', message: wrapText(result), typeOf: typeof result });
         }
     } catch (error) {
         // Determine error type and post the error message back
         const errorType = error instanceof SyntaxError ? "Syntax Error" : "Runtime Error";
-        self.postMessage({ type: 'error', message: `${errorType}: ${error.message}` });
+        self.postMessage({ type: 'error', message: `${errorType}: ${wrapText(error.message)}` });
     } finally {
         performance.mark('executionEnded'); // Mark the end of execution
         performance.measure('Execution Time', 'executionStarted', 'executionEnded'); // Measure the execution time

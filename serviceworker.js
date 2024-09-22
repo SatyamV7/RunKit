@@ -4,8 +4,8 @@
 // Names of the two caches used in this version of the service worker.
 // Change to v2, etc. when you update any of the local resources, which will
 // in turn trigger the install event again.
-const PRECACHE = 'Static_Cache v1.7.010-BetaBuild';
-const RUNTIME = 'Dynamic_Cache v1.7.010-BetaBuild';
+const PRECACHE = 'Static_Cache v1.7.011-BetaBuild';
+const RUNTIME = 'Dynamic_Cache v1.7.011-BetaBuild';
 
 // Flag to enable or disable caching
 const ENABLE_CACHING = true;
@@ -25,7 +25,8 @@ const PRECACHE_URLS = [
     'libs/monaco-editor@0.50.0/package/min/vs/editor/editor.main.nls.js',
     'libs/monaco-editor@0.50.0/package/min/vs/editor/editor.main.js',
     'assets/fonts/JetBrainsMono-Regular.woff2',
-    'libs/babel/babel.min.js',
+    'libs/esbuild/browser.min.js',
+    'libs/esbuild/esbuild.wasm',
 ];
 
 // The install handler takes care of precaching the resources we always need.

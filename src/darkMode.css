@@ -45,7 +45,7 @@ div.Buttons>button {
 }
 
 div.Buttons>button:hover {
-    background: #272a2c;
+    background: #272a2c50;
 }
 
 .Workspace::before {
