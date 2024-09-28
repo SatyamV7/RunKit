@@ -48,6 +48,11 @@ div.Buttons>button:hover {
     background: #272a2c50;
 }
 
+.console-message:hover {
+    cursor: pointer;
+    background-color: rgb(255 255 255 / 10%);
+}
+
 .Workspace::before {
     content: "";
     z-index: -1;
