@@ -241,6 +241,11 @@ body {
     box-shadow: none;
 }
 
+.Workspace {
+    width: 100%;
+    height: 100%;
+}
+
 #console {
     height: 100%;
     background-color: #f5f5f5;
@@ -249,6 +254,8 @@ body {
     overflow: overlay;
     border: 1px solid #dee2e6;
     padding: 1rem !important;
+    overflow: hidden overlay;
+    display: flex;
 }
 
 .console-message {
@@ -259,8 +266,10 @@ body {
     font-weight: 500;
     display: flex;
     min-height: 34px;
+    height: fit-content;
     justify-content: space-between;
     font-family: JetBrainsMono, 'Courier New', Courier, monospace;
+    width: 100%;
     align-items: center;
 }
 

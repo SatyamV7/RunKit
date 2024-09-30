@@ -68,8 +68,14 @@ self.onmessage = function (event) {
             let currentLine = '';
             let indent = paragraph.match(/^\s*/)[0]; // Detect and preserve indentation
             for (const word of words) {
-                // Check if adding the word exceeds the max line length
-                if (currentLine.length + word.length > maxLineLength) {
+                // Check if a single word exceeds the max line length
+                if (word.length > maxLineLength) {
+                    // Split the word and add newlines between parts
+                    for (let j = 0; j < word.length; j += maxLineLength) {
+                        lines.push(word.substring(j, j + maxLineLength));
+                    }
+                    currentLine = ''; // Reset current line after splitting the long word
+                } else if (currentLine.length + word.length > maxLineLength) {
                     lines.push(currentLine); // Push current line to the array
                     currentLine = indent + word.trim(); // Start a new line with the current word and indent
                 } else {
