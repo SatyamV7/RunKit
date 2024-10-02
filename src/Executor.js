@@ -371,12 +371,9 @@ self.onmessage = function (event) {
                 for (let i = 0; i < data.length; i++) {
                     typeof data[i] === 'string' ? (function () { result.push([i.toString(), `'${data[i]}'`]) })() : null;
                     Array.isArray(data[i]) ? (function arrayTransformer(scope) {
-                        let skipArr = [];
-                        let skipLen = result[0].length - 1;
-                        for (j = 0; j < skipLen; j++) skipArr.push(null);
-                        result.push([i.toString(), ...skipArr]);
+                        result.push([i.toString(), null]);
                         for (let k = 0; k < scope.length; k++) {
-                            result[0].push(k.toString())
+                            result[0].length - 2 > k ? null : result[0].push(k.toString());
                             typeof scope[k] === 'string' ? result[result.length - 1].push(`'${scope[k]}'`) : null;
                             Array.isArray(scope[k]) ? result[result.length - 1].push(JavaScriptArray(scope[k])) : null;
                         }
