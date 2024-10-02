@@ -256,6 +256,7 @@ body {
     padding: 1rem !important;
     overflow: hidden overlay;
     display: flex;
+    flex-direction: column;
 }
 
 .console-message {
