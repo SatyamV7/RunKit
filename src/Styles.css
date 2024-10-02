@@ -261,16 +261,15 @@ body {
 
 .console-message {
     padding: 0.5rem;
-    margin: 0.5rem;
     border-radius: 5px;
     font-size: 14px;
     font-weight: 500;
     display: flex;
     min-height: 34px;
     height: fit-content;
-    justify-content: space-between;
+    justify-content: center;
     font-family: JetBrainsMono, 'Courier New', Courier, monospace;
-    width: 100%;
+    width: -webkit-fill-available;
     align-items: center;
 }
 
