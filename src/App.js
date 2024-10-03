@@ -143,7 +143,7 @@ function executeCode() {
         }
     };
     // Send the code to the Executor for execution
-    Executor.postMessage({ code, ESM: _ESM, TS: _TS, maxEnvLnLen: 115 });
+    Executor.postMessage({ code, ESM: _ESM, TS: _TS, maxEnvLnLen: Math.floor(((document.getElementById('console').clientWidth - 48) / 7.735)) });
     Executor.onerror = function (error) {
         logToConsole('Worker Error: ' + error.message, 'error');
         isExecuting = false;
