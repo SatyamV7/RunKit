@@ -18,7 +18,7 @@ html {
 }
 
 ::-webkit-scrollbar {
-    width: 17px;
+    width: 1rem;
     display: block;
     background: transparent;
 }
@@ -251,12 +251,9 @@ body {
     background-color: #f5f5f5;
     border-radius: 10px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    overflow: overlay;
     border: 1px solid #dee2e6;
-    padding: 1rem !important;
-    overflow: hidden overlay;
-    display: flex;
-    flex-direction: column;
+    padding: 1rem 0 1rem 1rem;
+    overflow: hidden scroll;
 }
 
 .console-message {
@@ -267,7 +264,7 @@ body {
     display: flex;
     min-height: 34px;
     height: fit-content;
-    justify-content: left;
+    justify-content: center;
     font-family: JetBrainsMono, 'Courier New', Courier, monospace;
     width: -webkit-fill-available;
     align-items: center;
@@ -277,6 +274,10 @@ body {
 .console-message:hover {
     cursor: pointer;
     background-color: rgba(0, 0, 0, 0.1);
+}
+
+.console-message>pre {
+    width: -webkit-fill-available;
 }
 
 .log {
