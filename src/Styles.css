@@ -267,7 +267,7 @@ body {
     display: flex;
     min-height: 34px;
     height: fit-content;
-    justify-content: center;
+    justify-content: left;
     font-family: JetBrainsMono, 'Courier New', Courier, monospace;
     width: -webkit-fill-available;
     align-items: center;

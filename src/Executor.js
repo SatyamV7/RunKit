@@ -366,18 +366,22 @@ self.onmessage = function (event) {
             return;
         }
         function DataTransformer(data) {
+            let valueExists = false;
             let result = [['(index)', 'Value']];
             if (data.length !== 0) {
                 for (let i = 0; i < data.length; i++) {
-                    typeof data[i] === 'string' ? (function () { result.push([i.toString(), `'${data[i]}'`]) })() : null;
-                    Array.isArray(data[i]) ? (function arrayTransformer(scope) {
-                        result.push([i.toString(), null]);
-                        for (let k = 0; k < scope.length; k++) {
-                            result[0].length - 2 > k ? null : result[0].push(k.toString());
-                            typeof scope[k] === 'string' ? result[result.length - 1].push(`'${scope[k]}'`) : null;
-                            Array.isArray(scope[k]) ? result[result.length - 1].push(JavaScriptArray(scope[k])) : null;
+                    typeof data[i] === 'string' ? valueExists = true && result.push([i.toString(), `'${data[i]}'`]) : null;
+                    typeof data[i] !== 'object' && typeof data[i] !== 'string' ? valueExists = true && result.push([i.toString(), data[i]]) : null;
+                    Array.isArray(data[i]) ? (function () {
+                        valueExists ? result.push([i.toString(), null]) : result.push([i.toString()]) && result[0].pop();
+                        const headerLen = valueExists ? 2 : 1;
+                        for (let k = 0; k < data[i].length; k++) {
+                            result[0].length - headerLen > k ? null : result[0].push(k.toString());
+                            typeof data[i][k] === 'string' ? result[result.length - 1].push(`'${data[i][k]}'`) : null;
+                            typeof data[i][k] !== 'object' && typeof data[i][k] !== 'string' ? result[result.length - 1].push(data[i][k]) : null;
+                            Array.isArray(data[i][k]) ? result[result.length - 1].push(JavaScriptArray(data[i][k])) : null;
                         }
-                    })(data[i]) : null
+                    })() : null;
                 }
                 // Normalize all rows to have the same number of columns
                 let maxLen = Math.max(...result.map(row => row.length));
