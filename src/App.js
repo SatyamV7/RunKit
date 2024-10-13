@@ -17,6 +17,7 @@ let fileHandle;
 
 let _ESM = false;
 let _TS = false;
+let formatCode = false;
 
 const options = {
     types: [
@@ -158,7 +159,7 @@ function executeCode() {
     const consoleWidth = getElementWidth(document.getElementById('console'));
 
     // Send the code to the Executor for execution
-    Executor.postMessage({ code, ESM: _ESM, TS: _TS, maxEnvLnLen: Math.round(((consoleWidth - 48) / 7.735)) });
+    Executor.postMessage({ code, ESM: _ESM, TS: _TS, maxEnvLnLen: Math.round(((consoleWidth - 48) / 7.735)), formatCode: formatCode });
     Executor.onerror = function (error) {
         logToConsole('Worker Error: ' + error.message, 'error');
         isExecuting = false;

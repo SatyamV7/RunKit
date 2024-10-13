@@ -1,5 +1,5 @@
 self.onmessage = function (event) {
-    const { code, ESM, TS, maxEnvLnLen } = event.data;
+    const { code, ESM, TS, maxEnvLnLen, formatCode } = event.data;
 
     performance.mark('executionStarted'); // Mark the start of execution
 
@@ -96,41 +96,41 @@ self.onmessage = function (event) {
     }
 
     // Formatting functions for different types
-    function JavaScriptObject(obj, indentLevel = 1) {
-        let indent = '\u00A0'.repeat(indentLevel * 4);
-        let formatted = '{\n';
+    function JavaScriptObject(obj, indentLevel = 1, format = formatCode) {
+        let indent = format ? '\u00A0'.repeat(indentLevel * 4) : '';
+        let formatted = format ? '{\n' : '{';
         for (let key in obj) {
             if (obj.hasOwnProperty(key)) {
                 let value = obj[key];
                 if (typeof value === 'string') {
                     value = `'${JavaScriptString(value)}'`;
                 } else if (Array.isArray(value)) {
-                    value = JavaScriptArray(value, indentLevel + 1);
+                    value = JavaScriptArray(value, indentLevel + 1, format);
                 } else if (typeof value === 'object' && value !== null) {
-                    value = JavaScriptObject(value, indentLevel + 1);
+                    value = JavaScriptObject(value, indentLevel + 1, format);
                 }
-                formatted += `${indent}${key}: ${value},\n`;
+                formatted += format ? `${indent}${key}: ${value},\n` : `${key}:${value},`;
             }
         }
-        formatted = formatted.slice(0, -2) + `\n${'\u00A0'.repeat((indentLevel - 1) * 4)}}`;
+        formatted = format ? formatted.slice(0, -2) + `\n${'\u00A0'.repeat((indentLevel - 1) * 4)}}` : formatted.slice(0, -1) + '}';
         return formatted;
     }
 
-    function JavaScriptArray(arr, indentLevel = 1) {
-        let indent = '\u00A0'.repeat(indentLevel * 4);
-        let formatted = '[\n';
+    function JavaScriptArray(arr, indentLevel = 1, format = formatCode) {
+        let indent = format ? '\u00A0'.repeat(indentLevel * 4) : '';
+        let formatted = format ? '[\n' : '[';
         for (let i = 0; i < arr.length; i++) {
             let value = arr[i];
             if (typeof value === 'string') {
                 value = `'${JavaScriptString(value)}'`;
             } else if (Array.isArray(value)) {
-                value = JavaScriptArray(value, indentLevel + 1);
+                value = JavaScriptArray(value, indentLevel + 1, format);
             } else if (typeof value === 'object' && value !== null) {
-                value = JavaScriptObject(value, indentLevel + 1);
+                value = JavaScriptObject(value, indentLevel + 1, format);
             }
-            formatted += `${indent}${value},\n`;
+            formatted += format ? `${indent}${value},\n` : `${value},`;
         }
-        formatted = formatted.slice(0, -2) + `\n${'\u00A0'.repeat((indentLevel - 1) * 4)}]`;
+        formatted = format ? formatted.slice(0, -2) + `\n${'\u00A0'.repeat((indentLevel - 1) * 4)}]` : formatted.slice(0, -1) + ']';
         return formatted;
     }
 
