@@ -96,39 +96,41 @@ self.onmessage = function (event) {
     }
 
     // Formatting functions for different types
-    function JavaScriptObject(obj) {
-        let formatted = '{ ';
+    function JavaScriptObject(obj, indentLevel = 1) {
+        let indent = '\u00A0'.repeat(indentLevel * 4);
+        let formatted = '{\n';
         for (let key in obj) {
             if (obj.hasOwnProperty(key)) {
                 let value = obj[key];
                 if (typeof value === 'string') {
                     value = `'${JavaScriptString(value)}'`;
                 } else if (Array.isArray(value)) {
-                    value = JavaScriptArray(value);
+                    value = JavaScriptArray(value, indentLevel + 1);
                 } else if (typeof value === 'object' && value !== null) {
-                    value = JavaScriptObject(value);
+                    value = JavaScriptObject(value, indentLevel + 1);
                 }
-                formatted += `${key}: ${value}, `;
+                formatted += `${indent}${key}: ${value},\n`;
             }
         }
-        formatted = formatted.slice(0, -2) + ' }';
+        formatted = formatted.slice(0, -2) + `\n${'\u00A0'.repeat((indentLevel - 1) * 4)}}`;
         return formatted;
     }
 
-    function JavaScriptArray(arr) {
-        let formatted = '[';
+    function JavaScriptArray(arr, indentLevel = 1) {
+        let indent = '\u00A0'.repeat(indentLevel * 4);
+        let formatted = '[\n';
         for (let i = 0; i < arr.length; i++) {
             let value = arr[i];
             if (typeof value === 'string') {
                 value = `'${JavaScriptString(value)}'`;
             } else if (Array.isArray(value)) {
-                value = JavaScriptArray(value);
+                value = JavaScriptArray(value, indentLevel + 1);
             } else if (typeof value === 'object' && value !== null) {
-                value = JavaScriptObject(value);
+                value = JavaScriptObject(value, indentLevel + 1);
             }
-            formatted += `${value}, `;
+            formatted += `${indent}${value},\n`;
         }
-        formatted = formatted.slice(0, -2) + ']';
+        formatted = formatted.slice(0, -2) + `\n${'\u00A0'.repeat((indentLevel - 1) * 4)}]`;
         return formatted;
     }
 
@@ -451,7 +453,7 @@ self.onmessage = function (event) {
     } catch (error) {
         // Determine error type and post the error message back
         const errorType = error instanceof SyntaxError ? "Syntax Error" : "Runtime Error";
-        self.postMessage({ type: 'error', message: `${errorType}: ${wrapText(error.message)}` });
+        self.postMessage({ type: 'error', message: wrapText(`${errorType}: ${error.message}`) });
     } finally {
         performance.mark('executionEnded'); // Mark the end of execution
         performance.measure('Execution Time', 'executionStarted', 'executionEnded'); // Measure the execution time
