@@ -444,7 +444,7 @@ self.onmessage = function (event) {
         self.postMessage({ executionStatus: 'executionStarted' }); // Notify that execution has started
 
         // Wrap the code in an IIFE to use setTimeout and setInterval
-        const result = (function () { eval(`(() => { ${transpiledCode}; undefined })()`) })();
+        const result = (function () { eval(`(() => { ${transpiledCode} })()`) })();
 
         // If the result is not undefined, post it back as a log message
         if (result !== undefined) {

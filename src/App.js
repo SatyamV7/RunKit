@@ -1,5 +1,4 @@
 // States & Variables
-let Executor; // Variable to store the Web Worker
 var importedLibrary; // Variable to store imported library code
 var isExecuting = false; // Variable to store the execution status
 
@@ -50,6 +49,9 @@ var editor = monaco.editor.create(document.getElementById('editor'), {
     stickyScroll: { enabled: false },
     fontLigatures: true,
 });
+
+// Create a new Web Worker
+let Executor = new Worker('/src/Executor.js');
 
 function ESM(state) {
     state ? TS(false) : null;
@@ -121,8 +123,6 @@ function executeCode() {
     isExecuting = true;
     runButton.disabled = true;
     stopButton.disabled = false;
-    // Create a new Web Worker
-    Executor = new Worker('/src/Executor.js');
     // Set up a message handler to receive the results
     Executor.onmessage = function (event) {
         const { type, message, typeOf, executionStatus, executionTime } = event.data;
@@ -139,7 +139,6 @@ function executeCode() {
             isExecuting = false;
             runButton.disabled = false;
             stopButton.disabled = true;
-            //console.clear();
             console.log(`Execution Time: ${executionTime}ms`);
         }
     };
@@ -174,9 +173,10 @@ stopButton.disabled = true; // Disable the stop button by default
 
 // Function to stop the code execution
 function stopExecution() {
-    if (Executor !== undefined) {
+    if (Executor) {
         isExecuting = false;
         Executor.terminate(); // Terminate the Executor and log a message to the console
+        Executor = new Worker('/src/Executor.js'); // Create a new worker instance
         runButton.disabled = false;
         stopButton.disabled = true;
         logToConsole('Code execution stopped by the user', 'error');
