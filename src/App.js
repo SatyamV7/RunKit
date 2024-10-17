@@ -143,22 +143,8 @@ function executeCode() {
         }
     };
 
-    function getElementWidth(element) {
-        // Get the element's bounding box, which includes padding and borders
-        const rect = element.getBoundingClientRect();
-        const style = window.getComputedStyle(element);
-        // Get the margins from the computed style
-        const marginLeft = parseFloat(style.marginLeft);
-        const marginRight = parseFloat(style.marginRight);
-        // Full width including margins
-        const fullWidth = rect.width + marginLeft + marginRight;
-        return fullWidth;
-    }
-
-    const consoleWidth = getElementWidth(document.getElementById('console'));
-
     // Send the code to the Executor for execution
-    Executor.postMessage({ code, ESM: _ESM, TS: _TS, maxEnvLnLen: Math.round(((consoleWidth - 48) / 7.735)), formatCode: formatCode });
+    Executor.postMessage({ code, ESM: _ESM, TS: _TS, formatCode: formatCode });
     Executor.onerror = function (error) {
         logToConsole('Worker Error: ' + error.message, 'error');
         isExecuting = false;
