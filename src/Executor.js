@@ -359,77 +359,117 @@ self.onmessage = function (event) {
     };
 
     // Override console.table to log an array/object of objects as a table
-    // Warning: This implementation is not perfect and may not work in all cases (especially with cases involving mixed data)
-    // Otherwise, it should work for most simple cases
-    // This implementation will be improved in the future for senarios where the data is more complex (e.g. objects in arrays and vice versa)
     console.table = (data) => {
         if (!data || (typeof data !== 'object')) {
-            console.log(data)
+            console.log(data);
             return;
         }
 
         function DataTransformer(data) {
-            let valueExists = false;
-            let result = [['(index)', 'Value']];
-            const headerMap = new Map(); // Map to track column headers
-
-            if (data.length !== 0) {
-                Array.isArray(data) ? ArrayTransformer(data) : ObjectTransformer(data);
-
-                // Function to transform data (top-level array)
-                function ArrayTransformer(scope) {
-                    for (let i = 0; i < scope.length; i++) {
-                        typeof scope[i] === 'string' ? valueExists = true && result.push([i.toString(), `'${scope[i]}'`]) : null;
-                        typeof scope[i] !== 'object' && typeof scope[i] !== 'string' ? valueExists = true && result.push([i.toString(), scope[i]]) : null;
-                        Array.isArray(scope[i]) ? (function () {
-                            valueExists ? result.push([i.toString(), null]) : result.push([i.toString()]) && result[0].pop();
-                            const headerLen = valueExists ? 2 : 1;
-                            for (let k = 0; k < scope[i].length; k++) {
-                                result[0].length - headerLen > k && +result[0][result[0].length - 1] !== NaN ? null : result[0].push(k.toString());
-                                typeof scope[i][k] === 'string' ? result[result.length - 1].push(`'${scope[i][k]}'`) : null;
-                                typeof scope[i][k] !== 'object' && typeof scope[i][k] !== 'string' ? result[result.length - 1].push(scope[i][k].toString()) : null;
-                                typeof scope[i][k] === 'object' && !Array.isArray(scope[i][k]) ? result[result.length - 1].push(JavaScriptObject(scope[i][k])) : null;
-                                Array.isArray(scope[i][k]) ? result[result.length - 1].push(JavaScriptArray(scope[i][k])) : null;
-                            }
-                        })() : null;
+            const maxHeight = data.length || Object.keys(data).length;
+            const { maxObjectLength, maxArrayLength } = Object.values(data).reduce(
+                (acc, value) => {
+                    if (typeof value === 'object' && !Array.isArray(value)) {
+                        acc.maxObjectLength = Math.max(acc.maxObjectLength, Object.keys(value).length);
+                    } else if (Array.isArray(value)) {
+                        acc.maxArrayLength = Math.max(acc.maxArrayLength, value.length);
                     }
-                }
+                    return acc;
+                },
+                { maxObjectLength: 0, maxArrayLength: 0 }
+            );
+            const maxWidth = maxObjectLength + maxArrayLength;
+            const hasValue = Object.keys(data).some(key => typeof data[key] !== 'object');
+            const result = Array.from({ length: maxHeight + 1 }, () =>
+                Array.from({ length: maxWidth + (hasValue ? 2 : 1) }, () => null)
+            );
+            const header = new Map();
 
-                // Function to transform data (top-level object)
-                function ObjectTransformer(scope) {
-                    for (let key in scope) {
-                        typeof scope[key] === 'string' ? valueExists = true && result.push([key, `'${scope[key]}'`]) : null;
-                        typeof scope[key] !== 'object' && typeof scope[key] !== 'string' ? valueExists = true && result.push([key, scope[key]]) : null;
-                        if (typeof scope[key] === 'object' && !Array.isArray(scope[key])) {
-                            valueExists ? result.push([key, null]) : result.push([key]) && result[0].pop();
-                            let nestedObject = scope[key];
-                            let currentRow = result[result.length - 1];
-                            for (let subKey in nestedObject) {
-                                !headerMap.has(subKey) ? headerMap.set(subKey, result[0].length) && result[0].push(subKey) : null;
-                                let headerIndex = headerMap.get(subKey);
-                                while (currentRow.length < headerIndex) currentRow.push(null);
-                                typeof nestedObject[subKey] === 'string' ? currentRow.push(`'${nestedObject[subKey]}'`) : null;
-                                typeof nestedObject[subKey] !== 'object' && typeof nestedObject[subKey] !== 'string' ? currentRow.push(nestedObject[subKey].toString()) : null;
-                                typeof nestedObject[subKey] === 'object' && !Array.isArray(nestedObject[subKey]) ? currentRow.push(JavaScriptObject(nestedObject[subKey])) : null;
-                                Array.isArray(nestedObject[subKey]) ? currentRow.push(JavaScriptArray(nestedObject[subKey])) : null;
-                            }
+            // Helper function to sort data into primitives, arrays, and objects
+            function sortData(data) {
+                const result = { primitives: {}, arrays: {}, objects: {} };
+                Object.keys(data).forEach(key => {
+                    const value = data[key];
+                    if (typeof value === 'object') {
+                        if (Array.isArray(value)) {
+                            result.arrays[key] = value;
+                        } else {
+                            result.objects[key] = value;
                         }
+                    } else {
+                        result.primitives[key] = value;
                     }
-                }
+                });
+                return result;
+            }
 
-                // Normalize all rows to have the same number of columns
-                let maxLen = Math.max(...result.map(row => row.length));
-                for (let i = 0; i < result.length; i++) {
-                    while (result[i].length < maxLen) {
-                        result[i].push(null);
+            // Helper function to format data types
+            function formatData(data) {
+                if (typeof data === 'string') return `'${data}'`;
+                if (Array.isArray(data)) return JavaScriptArray(data);
+                if (typeof data === 'object' && data !== null) return JavaScriptObject(data);
+                return data;
+            }
+
+            if (maxHeight !== 0) {
+                result[0][0] = '(index)';
+                if (hasValue) result[0][1] = 'Value';
+            }
+
+            const { primitives, arrays, objects } = sortData(data);
+            let rowIndex = 1;
+
+            // Process primitives (non-object values)
+            if (hasValue) {
+                Object.keys(primitives).forEach(key => {
+                    result[rowIndex][0] = key;
+                    result[rowIndex][1] = formatData(primitives[key]);
+                    rowIndex++;
+                });
+            }
+
+            // Process arrays
+            Object.keys(arrays).forEach(key => {
+                result[rowIndex][0] = key;
+                arrays[key].forEach((item, index) => {
+                    if (result[0][hasValue ? index + 2 : index + 1] === null) {
+                        result[0][hasValue ? index + 2 : index + 1] = index + 1;
                     }
+                    result[rowIndex][hasValue ? index + 2 : index + 1] = formatData(item);
+                });
+                rowIndex++;
+            });
+
+            // Process objects without overriding existing headers
+            Object.keys(objects).forEach(key => {
+                result[rowIndex][0] = key;
+                const object = objects[key];
+                Object.keys(object).forEach(objectKey => {
+                    let headerIndex = header.get(objectKey) || result[0].indexOf(null);
+                    if (headerIndex === -1) {
+                        headerIndex = result[0].length;
+                        result[0][headerIndex] = objectKey;
+                    } else {
+                        result[0][headerIndex] = result[0][headerIndex] || objectKey;
+                    }
+                    header.set(objectKey, headerIndex);
+                    result[rowIndex][headerIndex] = formatData(object[objectKey]);
+                });
+                rowIndex++;
+            });
+
+            let maxLen = Math.max(...result.map(row => row.length));
+            for (let i = 0; i < result.length; i++) {
+                while (result[i].length < maxLen) {
+                    result[i].push(null);
                 }
             }
+
             return result;
         }
 
         // Function to create an ASCII-style table
-        function generateTable(a) { var b = Math.floor; function c(a, b, c, g) { var h, l, m, n, o, p, q, r, s, t, u, v, x, y = [], z = a, A = 0, B = 0; for (h = 0; h < z.length; h++) { if (0 == h && ("number" == c || "letter" == c)) { for (y.push([]), ("number" == g || "letter" == g) && (y[0][0] = { cell: { x: 0, y: 0, colspan: 1, rowspan: 1 }, empty: !0 }, B = 1), l = 0; l < z[h].length; l++)y[0][l + B] = { cell: { x: 0, y: l + B, colspan: 1, rowspan: 1 }, empty: !0 }; A = 1 } for (y.push([]), ("number" == g || "letter" == g) && (y[h + A][0] = { cell: { x: h + A, y: 0, colspan: 1, rowspan: 1 }, empty: !0 }, B = 1), l = 0; l < z[h].length; l++)if (x = !1, n = x ? { x: x.row + A, y: x.col + B, colspan: x.colspan, rowspan: x.rowspan } : { x: h + A, y: l + B, colspan: 1, rowspan: 1 }, o = z[h][l], !o) y[h + A][l + B] = { cell: n, empty: !0 }; else { for (q = 0, p = o.split("\n"), m = 0; m < p.length; m++)b && (0 !== p[m].indexOf(" ", 0) && (p[m] = " " + p[m]), -1 === p[m].indexOf(" ", p[m].length - 1) && (p[m] += " ")), p[m].length > q && (q = p[m].length); t = "left", s = "top", y[h + A][l + B] = { cell: n, empty: !1, pseudoRows: p, maxWidth: q, vAlign: s, hAlign: t } } } if (u = d(y, h + A - 1, l + B - 1), v = e(y, h + A - 1, l + B - 1), "none" != g && (B = 1), "number" == c || "letter" == c) for (l = 0; l < v - B; l++)y[0][l + B] = f(0, l + B, c, b, l); if ("none" != c && (A = 1), "number" == g || "letter" == g) for (h = 0; h < u - A; h++)y[h + A][0] = f(h + A, 0, g, b, h); return { arr: y, vLen: u, hLen: v } } function d(a, b, c) { var d, e, f, g, h = 0; for (d = b; 0 <= d; d--)for (e = 0; e <= c; e++)f = a[d][e], f.empty || (g = f.cell.x + f.cell.rowspan, g > h && (h = g)); return h } function e(a, b, c) { var d, e, f, g, k = 0; for (e = c; 0 <= e; e--)for (d = 0; d <= b; d++)f = a[d][e], f.empty || (g = f.cell.y + f.cell.colspan, g > k && (k = g)); return k } function f(a, c, d, e, f) { var h, i, g = String.fromCharCode, j = ""; if (e && (j += " "), "letter" == d) { i = "", h = f; do i = g(65 + h % 26) + i, h = b(h / 26) - 1; while (-1 < h); j += i } else j += (f + 1).toString(); return e && (j += " "), { cell: { x: a, y: c, colspan: 1, rowspan: 1 }, empty: !1, pseudoRows: [j], maxWidth: j.length, vAlign: "middle", hAlign: "center" } } function g(a, b, c, d, e, f, g, m, n, p) { var i, s, t, u, v, w, x = ""; if (-1 == p) { if (t = "horizontalTop", "none" == n.horizontalTop) return x; } else if (p >= a.vLen - 1) { if (t = "horizontalBottom", "none" == n.horizontalBottom) return x; } else if (q(a, n, p, g)) t = "horizontalInnerHeader"; else if (r(a, n, p)) t = "horizontalInner"; else return x; var y = n[t], z = e[f][y].horizontal; for (x += h(a, n, g, m, d, p, -1), i = 0; i < b.length; i++) { if (u = !0, -1 < p && (v = a.arr[p][i], v.cell.x + v.cell.rowspan - 1 > p && (u = !1, w = l(a, c, n, g, p + 1, i) - 1, x += o(a, w, b, p, i), i += v.cell.colspan - 1)), u) for (s = 0; s < b[i]; s++)x += z; x += h(a, n, g, m, d, p, i) } return 0 == b.length && (x += h(a, n, g, m, d, p, b.length)), x += "\n", x } function h(a, b, c, d, e, f, g) { var h, i, j, k, l, m, n, o, p = ""; if (-1 == f) h = !0, i = !1, l = "horizontalTop"; else if (f >= a.vLen - 1) h = !1, i = !0, l = "horizontalBottom"; else if (h = !1, i = !1, q(a, b, f, c)) l = "horizontalInnerHeader"; else if (r(a, b, f)) l = "horizontalInner"; else return p; if (-1 == g) j = !0, k = !1, n = "verticalLeft"; else if (g >= a.hLen - 1) j = !1, k = !0, n = "verticalRight"; else if (j = !1, k = !1, "none" != d && 0 == g) n = "verticalInnerHeader"; else if (g < a.hLen - 1) n = "verticalInner"; else return p; !h && 0 <= g && (m = a.arr[f][g], m.cell.y + m.cell.colspan - 1 > g && (h = !0)), !i && 0 <= g && (m = a.arr[f + 1][g], m.cell.y + m.cell.colspan - 1 > g && (i = !0)), !j && 0 <= f && (m = a.arr[f][g], m.cell.x + m.cell.rowspan - 1 > f && (j = !0)), !k && 0 <= f && (m = a.arr[f][g + 1], m.cell.x + m.cell.rowspan - 1 > f && (k = !0)); var s = b[l], t = b[n]; return o = e[h ? "none" : t][k ? "none" : s][i ? "none" : t][j ? "none" : s], p += o, p } function l(a, b, c, d, e, f) { var h, i, j, g = Math.ceil; return i = a.arr[a.arr[e][f].cell.x][a.arr[e][f].cell.y], j = n(a, c, d, b, i, e), h = j.offset, h += "bottom" == i.vAlign ? i.pseudoRows.length - j.height : "middle" == i.vAlign ? g((i.pseudoRows.length - j.height) / 2) : 0, h } function n(a, b, c, d, e, f) { var g, h, i; for (g = 0, h = d[e.cell.x], i = 1; i < e.cell.rowspan; i++)h += q(a, b, e.cell.x + i - 1, c) || r(a, b, e.cell.x + i - 1) ? 1 : 0, e.cell.x + i <= f && (g = h), h += d[e.cell.x + i]; return { height: h, offset: g } } function o(a, c, d, e, f) { var g, h, i, j, l, m = ""; for (g = a.arr[a.arr[e][f].cell.x][a.arr[e][f].cell.y], h = p(d, g), j = g.empty ? "" : g.pseudoRows[c] || "", l = "right" == g.hAlign ? h - j.length : "center" == g.hAlign ? b((h - j.length) / 2) : 0, i = 0; i < l; i++)m += " "; for (m += s(j), l = h - j.length - l, i = 0; i < l; i++)m += " "; return m } function p(a, b) { var c, d; for (c = a[b.cell.y], d = 1; d < b.cell.colspan; d++)c += 1, c += a[b.cell.y + d]; return c } function q(a, b, c, d) { return "none" != b.horizontalInnerHeader && "none" != d && 0 == c && 1 < a.vLen } function r(a, b, c) { return "none" != b.horizontalInner && c < a.vLen - 1 } function s(a) { return a.replace(/[<>\&]/g, function (a) { return "&#" + a.charCodeAt(0) + ";" }) } var t, k, u, v, w = { none: { none: { double: { double: "\u2557" } }, double: { none: { double: "\u2550" }, double: { none: "\u2554", double: "\u2566" } } }, double: { none: { none: { double: "\u255D" }, double: { none: "\u2551", double: "\u2563" } }, double: { none: { none: "\u255A", double: "\u2569" }, double: { none: "\u2560", double: "\u256C" } } } }, x = { unicode: { double: { vertical: w.double.none.double.none, horizontal: w.none.double.none.double } } }, y = !0, z = "unicode", A = "first_line", B = "none", C = { horizontalTop: "double", horizontalInnerHeader: "double", horizontalInner: "double", horizontalBottom: "double", verticalLeft: "double", verticalInnerHeader: "double", verticalInner: "double", verticalRight: "double", asciiIntersection: "plus" }, D = c(a, y, A, B), E = function d(b, c) { var e, f, g, h, k, l, a = [], m = []; for (f = 0; f < b.hLen; f++) { for (g = 0, c && (g = 1), e = 0; e < b.vLen; e++)h = b.arr[e][f], h.empty || (1 == h.cell.colspan && 1 == h.cell.rowspan ? h.maxWidth > g && (g = h.maxWidth) : e == h.cell.x && f == h.cell.y && m.push(h)); a[f] = g } return a }(D, y), F = function f(b, c, d, e) { var g, k, l, n, o, m, a = [], p = []; for (g = 0; g < b.vLen; g++) { for (l = 0, e && (l = 1), k = 0; k < b.hLen; k++)n = b.arr[b.arr[g][k].cell.x][b.arr[g][k].cell.y], n.empty || (1 == n.cell.colspan && 1 == n.cell.rowspan ? n.pseudoRows.length > l && (l = n.pseudoRows.length) : g == n.cell.x && k == n.cell.y && p.push(n)); a[g] = l } return a }(D, C, A, y), G = ""; for (G += g(D, E, F, w, x, z, A, B, C, -1), t = 0; t < D.vLen; t++) { for (v = [], k = 0; k < E.length; k++)v[k] = l(D, F, C, A, t, k); for (u = 0; u < F[t]; u++) { for (G += x[z][C.verticalLeft].vertical, k = 0; k < E.length; k++)G += o(D, v[k] + u, E, t, k), k += D.arr[t][k].cell.colspan - 1, "none" != B && 0 == k && 1 < D.hLen ? G += x[z][C.verticalInnerHeader].vertical : k < E.length - 1 && (G += x[z][C.verticalInner].vertical); G += x[z][C.verticalRight].vertical, G += "\n" } G += g(D, E, F, w, x, z, A, B, C, t) } return 0 == D.vLen && (G += g(D, E, F, w, x, z, A, B, C, D.vLen)), G.trim() }
+        function generateTable(a) { var b = Math.floor; function c(a, b, c, g) { var h, l, m, n, o, p, q, r, s, t, u, v, x, y = [], z = a, A = 0, B = 0; for (h = 0; h < z.length; h++) { if (0 == h && ("number" == c || "letter" == c)) { for (y.push([]), ("number" == g || "letter" == g) && (y[0][0] = { cell: { x: 0, y: 0, colspan: 1, rowspan: 1 }, empty: !0 }, B = 1), l = 0; l < z[h].length; l++)y[0][l + B] = { cell: { x: 0, y: l + B, colspan: 1, rowspan: 1 }, empty: !0 }; A = 1 } for (y.push([]), ("number" == g || "letter" == g) && (y[h + A][0] = { cell: { x: h + A, y: 0, colspan: 1, rowspan: 1 }, empty: !0 }, B = 1), l = 0; l < z[h].length; l++)if (x = !1, n = x ? { x: x.row + A, y: x.col + B, colspan: x.colspan, rowspan: x.rowspan } : { x: h + A, y: l + B, colspan: 1, rowspan: 1 }, o = z[h][l], !o) y[h + A][l + B] = { cell: n, empty: !0 }; else { for (q = 0, p = o.toString().split("\n"), m = 0; m < p.length; m++)b && (0 !== p[m].indexOf(" ", 0) && (p[m] = " " + p[m]), -1 === p[m].indexOf(" ", p[m].length - 1) && (p[m] += " ")), p[m].length > q && (q = p[m].length); t = "left", s = "top", y[h + A][l + B] = { cell: n, empty: !1, pseudoRows: p, maxWidth: q, vAlign: s, hAlign: t } } } if (u = d(y, h + A - 1, l + B - 1), v = e(y, h + A - 1, l + B - 1), "none" != g && (B = 1), "number" == c || "letter" == c) for (l = 0; l < v - B; l++)y[0][l + B] = f(0, l + B, c, b, l); if ("none" != c && (A = 1), "number" == g || "letter" == g) for (h = 0; h < u - A; h++)y[h + A][0] = f(h + A, 0, g, b, h); return { arr: y, vLen: u, hLen: v } } function d(a, b, c) { var d, e, f, g, h = 0; for (d = b; 0 <= d; d--)for (e = 0; e <= c; e++)f = a[d][e], f.empty || (g = f.cell.x + f.cell.rowspan, g > h && (h = g)); return h } function e(a, b, c) { var d, e, f, g, k = 0; for (e = c; 0 <= e; e--)for (d = 0; d <= b; d++)f = a[d][e], f.empty || (g = f.cell.y + f.cell.colspan, g > k && (k = g)); return k } function f(a, c, d, e, f) { var h, i, g = String.fromCharCode, j = ""; if (e && (j += " "), "letter" == d) { i = "", h = f; do i = g(65 + h % 26) + i, h = b(h / 26) - 1; while (-1 < h); j += i } else j += (f + 1).toString(); return e && (j += " "), { cell: { x: a, y: c, colspan: 1, rowspan: 1 }, empty: !1, pseudoRows: [j], maxWidth: j.length, vAlign: "middle", hAlign: "center" } } function g(a, b, c, d, e, f, g, m, n, p) { var i, s, t, u, v, w, x = ""; if (-1 == p) { if (t = "horizontalTop", "none" == n.horizontalTop) return x; } else if (p >= a.vLen - 1) { if (t = "horizontalBottom", "none" == n.horizontalBottom) return x; } else if (q(a, n, p, g)) t = "horizontalInnerHeader"; else if (r(a, n, p)) t = "horizontalInner"; else return x; var y = n[t], z = e[f][y].horizontal; for (x += h(a, n, g, m, d, p, -1), i = 0; i < b.length; i++) { if (u = !0, -1 < p && (v = a.arr[p][i], v.cell.x + v.cell.rowspan - 1 > p && (u = !1, w = l(a, c, n, g, p + 1, i) - 1, x += o(a, w, b, p, i), i += v.cell.colspan - 1)), u) for (s = 0; s < b[i]; s++)x += z; x += h(a, n, g, m, d, p, i) } return 0 == b.length && (x += h(a, n, g, m, d, p, b.length)), x += "\n", x } function h(a, b, c, d, e, f, g) { var h, i, j, k, l, m, n, o, p = ""; if (-1 == f) h = !0, i = !1, l = "horizontalTop"; else if (f >= a.vLen - 1) h = !1, i = !0, l = "horizontalBottom"; else if (h = !1, i = !1, q(a, b, f, c)) l = "horizontalInnerHeader"; else if (r(a, b, f)) l = "horizontalInner"; else return p; if (-1 == g) j = !0, k = !1, n = "verticalLeft"; else if (g >= a.hLen - 1) j = !1, k = !0, n = "verticalRight"; else if (j = !1, k = !1, "none" != d && 0 == g) n = "verticalInnerHeader"; else if (g < a.hLen - 1) n = "verticalInner"; else return p; !h && 0 <= g && (m = a.arr[f][g], m.cell.y + m.cell.colspan - 1 > g && (h = !0)), !i && 0 <= g && (m = a.arr[f + 1][g], m.cell.y + m.cell.colspan - 1 > g && (i = !0)), !j && 0 <= f && (m = a.arr[f][g], m.cell.x + m.cell.rowspan - 1 > f && (j = !0)), !k && 0 <= f && (m = a.arr[f][g + 1], m.cell.x + m.cell.rowspan - 1 > f && (k = !0)); var s = b[l], t = b[n]; return o = e[h ? "none" : t][k ? "none" : s][i ? "none" : t][j ? "none" : s], p += o, p } function l(a, b, c, d, e, f) { var h, i, j, g = Math.ceil; return i = a.arr[a.arr[e][f].cell.x][a.arr[e][f].cell.y], j = n(a, c, d, b, i, e), h = j.offset, h += "bottom" == i.vAlign ? i.pseudoRows.length - j.height : "middle" == i.vAlign ? g((i.pseudoRows.length - j.height) / 2) : 0, h } function n(a, b, c, d, e, f) { var g, h, i; for (g = 0, h = d[e.cell.x], i = 1; i < e.cell.rowspan; i++)h += q(a, b, e.cell.x + i - 1, c) || r(a, b, e.cell.x + i - 1) ? 1 : 0, e.cell.x + i <= f && (g = h), h += d[e.cell.x + i]; return { height: h, offset: g } } function o(a, c, d, e, f) { var g, h, i, j, l, m = ""; for (g = a.arr[a.arr[e][f].cell.x][a.arr[e][f].cell.y], h = p(d, g), j = g.empty ? "" : g.pseudoRows[c] || "", l = "right" == g.hAlign ? h - j.length : "center" == g.hAlign ? b((h - j.length) / 2) : 0, i = 0; i < l; i++)m += " "; for (m += s(j), l = h - j.length - l, i = 0; i < l; i++)m += " "; return m } function p(a, b) { var c, d; for (c = a[b.cell.y], d = 1; d < b.cell.colspan; d++)c += 1, c += a[b.cell.y + d]; return c } function q(a, b, c, d) { return "none" != b.horizontalInnerHeader && "none" != d && 0 == c && 1 < a.vLen } function r(a, b, c) { return "none" != b.horizontalInner && c < a.vLen - 1 } function s(a) { return a.replace(/[<>\&]/g, function (a) { return "&#" + a.charCodeAt(0) + ";" }) } var t, k, u, v, w = { none: { none: { double: { double: "\u2557" } }, double: { none: { double: "\u2550" }, double: { none: "\u2554", double: "\u2566" } } }, double: { none: { none: { double: "\u255D" }, double: { none: "\u2551", double: "\u2563" } }, double: { none: { none: "\u255A", double: "\u2569" }, double: { none: "\u2560", double: "\u256C" } } } }, x = { unicode: { double: { vertical: w.double.none.double.none, horizontal: w.none.double.none.double } } }, y = !0, z = "unicode", A = "first_line", B = "none", C = { horizontalTop: "double", horizontalInnerHeader: "double", horizontalInner: "double", horizontalBottom: "double", verticalLeft: "double", verticalInnerHeader: "double", verticalInner: "double", verticalRight: "double", asciiIntersection: "plus" }, D = c(a, y, A, B), E = function d(b, c) { var e, f, g, h, k, l, a = [], m = []; for (f = 0; f < b.hLen; f++) { for (g = 0, c && (g = 1), e = 0; e < b.vLen; e++)h = b.arr[e][f], h.empty || (1 == h.cell.colspan && 1 == h.cell.rowspan ? h.maxWidth > g && (g = h.maxWidth) : e == h.cell.x && f == h.cell.y && m.push(h)); a[f] = g } return a }(D, y), F = function f(b, c, d, e) { var g, k, l, n, o, m, a = [], p = []; for (g = 0; g < b.vLen; g++) { for (l = 0, e && (l = 1), k = 0; k < b.hLen; k++)n = b.arr[b.arr[g][k].cell.x][b.arr[g][k].cell.y], n.empty || (1 == n.cell.colspan && 1 == n.cell.rowspan ? n.pseudoRows.length > l && (l = n.pseudoRows.length) : g == n.cell.x && k == n.cell.y && p.push(n)); a[g] = l } return a }(D, C, A, y), G = ""; for (G += g(D, E, F, w, x, z, A, B, C, -1), t = 0; t < D.vLen; t++) { for (v = [], k = 0; k < E.length; k++)v[k] = l(D, F, C, A, t, k); for (u = 0; u < F[t]; u++) { for (G += x[z][C.verticalLeft].vertical, k = 0; k < E.length; k++)G += o(D, v[k] + u, E, t, k), k += D.arr[t][k].cell.colspan - 1, "none" != B && 0 == k && 1 < D.hLen ? G += x[z][C.verticalInnerHeader].vertical : k < E.length - 1 && (G += x[z][C.verticalInner].vertical); G += x[z][C.verticalRight].vertical, G += "\n" } G += g(D, E, F, w, x, z, A, B, C, t) } return 0 == D.vLen && (G += g(D, E, F, w, x, z, A, B, C, D.vLen)), G.trim() }
         self.postMessage({ type: 'log', message: generateTable(DataTransformer(data)) });
     };
 
