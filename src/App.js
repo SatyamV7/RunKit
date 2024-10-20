@@ -162,7 +162,7 @@ function stopExecution() {
     if (Executor) {
         isExecuting = false;
         Executor.terminate(); // Terminate the Executor and log a message to the console
-        Executor = new Worker('/src/Executor.js'); // Create a new worker instance
+        Executor = new Worker('/src/Executor.min.js'); // Create a new worker instance
         runButton.disabled = false;
         stopButton.disabled = true;
         logToConsole('Code execution stopped by the user', 'error');
