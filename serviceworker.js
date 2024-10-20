@@ -14,11 +14,11 @@ const ENABLE_CACHING = true;
 const PRECACHE_URLS = [
     '/',
     'index.html',
-    'src/App.js',
     'favicon.ico',
     'src/Styles.css',
-    'src/Executor.js',
+    'src/App.min.js',
     'src/darkMode.css',
+    'src/Executor.min.js',
     'assets/icons/icon_clear.png',
     'libs/monaco-editor@0.50.0/package/min/vs/loader.js',
     'libs/monaco-editor@0.50.0/package/min/vs/editor/editor.main.css',

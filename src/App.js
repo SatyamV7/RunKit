@@ -51,7 +51,7 @@ var editor = monaco.editor.create(document.getElementById('editor'), {
 });
 
 // Create a new Web Worker
-let Executor = new Worker('/src/Executor.js');
+let Executor = new Worker('/src/Executor.min.js');
 
 function ESM(state) {
     state ? TS(false) : null;
