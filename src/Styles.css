@@ -279,7 +279,8 @@ body {
 
 .console-message>pre {
     width: -webkit-fill-available;
-    text-wrap: wrap;
+    word-wrap: break-word;
+    white-space: pre-wrap;
 }
 
 .log {

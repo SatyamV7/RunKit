@@ -143,8 +143,13 @@ function executeCode() {
         }
     };
 
+    function maxEnvLnLen(el) {
+        const envWidth = el.clientWidth - 32;
+        return Math.round(envWidth / 7.7391304347826086956521739130435);
+    }
+
     // Send the code to the Executor for execution
-    Executor.postMessage({ code, ESM: _ESM, TS: _TS, formatCode: formatCode });
+    Executor.postMessage({ code, ESM: _ESM, TS: _TS, formatCode: formatCode, maxEnvLnLen: maxEnvLnLen(document.getElementById('console')) });
     Executor.onerror = function (error) {
         logToConsole('Worker Error: ' + error.message, 'error');
         isExecuting = false;

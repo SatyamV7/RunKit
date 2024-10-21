@@ -1,5 +1,5 @@
 self.onmessage = function (event) {
-    const { code, ESM, TS, formatCode } = event.data;
+    const { code, ESM, TS, formatCode, maxEnvLnLen } = event.data;
 
     performance.mark('executionStarted'); // Mark the start of execution
 
@@ -173,7 +173,7 @@ self.onmessage = function (event) {
         return bool;
     }
 
-    function JavaScriptBigInt() {
+    function JavaScriptBigInt(num) {
         return `${num}n`;
     }
 
@@ -384,6 +384,7 @@ self.onmessage = function (event) {
                 Array.from({ length: maxWidth + (hasValue ? 2 : 1) }, () => null)
             );
             const header = new Map();
+            // const extSpaces = (maxWidth + (hasValue ? 2 : 1)) * 3 + 2;
 
             // Helper function to sort data into primitives, arrays, and objects
             function sortData(data) {
