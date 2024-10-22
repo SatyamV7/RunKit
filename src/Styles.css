@@ -266,7 +266,6 @@ body {
     min-height: 34px;
     height: fit-content;
     justify-content: center;
-    font-family: JetBrainsMono, 'Courier New', Courier, monospace;
     width: -webkit-fill-available;
     align-items: center;
 }
@@ -278,6 +277,7 @@ body {
 }
 
 .console-message>pre {
+    font-family: JetBrainsMono, 'Courier New', Courier, monospace;
     width: -webkit-fill-available;
     word-wrap: break-word;
     white-space: pre-wrap;

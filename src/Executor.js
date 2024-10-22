@@ -96,7 +96,7 @@ self.onmessage = function (event) {
     // Formatting functions for different types
     function JavaScriptObject(obj, indentLevel = 1, format = formatCode) {
         let indent = format ? '\u00A0'.repeat(indentLevel * 4) : '';
-        let formatted = format ? '{\n' : '{';
+        let formatted = format ? '{\n' : '{ ';
         for (let key in obj) {
             if (obj.hasOwnProperty(key)) {
                 let value = obj[key];
@@ -107,10 +107,10 @@ self.onmessage = function (event) {
                 } else if (typeof value === 'object' && value !== null) {
                     value = JavaScriptObject(value, indentLevel + 1, format);
                 }
-                formatted += format ? `${indent}${key}: ${value},\n` : `${key}:${value},`;
+                formatted += format ? `${indent}${key}: ${value},\n` : `${key}: ${value}, `;
             }
         }
-        formatted = format ? formatted.slice(0, -2) + `\n${'\u00A0'.repeat((indentLevel - 1) * 4)}}` : formatted.slice(0, -1) + '}';
+        formatted = format ? formatted.slice(0, -2) + `\n${'\u00A0'.repeat((indentLevel - 1) * 4)}}` : formatted.slice(0, -2) + ' }';
         return formatted;
     }
 
@@ -126,9 +126,9 @@ self.onmessage = function (event) {
             } else if (typeof value === 'object' && value !== null) {
                 value = JavaScriptObject(value, indentLevel + 1, format);
             }
-            formatted += format ? `${indent}${value},\n` : `${value},`;
+            formatted += format ? `${indent}${value},\n` : `${value}, `;
         }
-        formatted = format ? formatted.slice(0, -2) + `\n${'\u00A0'.repeat((indentLevel - 1) * 4)}]` : formatted.slice(0, -1) + ']';
+        formatted = format ? formatted.slice(0, -2) + `\n${'\u00A0'.repeat((indentLevel - 1) * 4)}]` : formatted.slice(0, -2) + ']';
         return formatted;
     }
 
