@@ -1,5 +1,5 @@
 self.onmessage = function (event) {
-    const { code, ESM, TS, formatCode, maxEnvLnLen } = event.data;
+    const { code, ESM, TS, formatCode } = event.data;
 
     performance.mark('executionStarted'); // Mark the start of execution
 
@@ -139,8 +139,8 @@ self.onmessage = function (event) {
             .replace(/\"/g, '\"') // Double quote
             .replace(/\n/g, '\n') // Newline
             .replace(/\r/g, '\r') // Carriage return
-            .replace(/\t/g, '\t')// Tab
-        // .replace(/\t/g, '\u00A0\u00A0\u00A0\u00A0'); // Tab Modification (tab --> 4 spaces)
+            .replace(/\t/g, '\t') // Tab
+        // .replace(/\t/g, '\u00A0'.repeat(4)); // Tab Modification (tab --> 4 spaces)
 
         // Handle \uXXXX Unicode escapes
         str = str.replace(/\u([0-9A-Fa-f]{4})/g, (match, p1) => {
@@ -212,7 +212,7 @@ self.onmessage = function (event) {
             return message;
         }).join(' ');
         messages = '\u00A0'.repeat(level * 2) + messages.replace(/\u000A/g, '\u000A' + '\u00A0'.repeat(level * 2));
-        return { type: typeOfMessage, message: messages, typeOf: typeof args };
+        return { type: typeOfMessage, message: messages, typeOf: typeof args, method: typeOfMessage };
         // }
     }
 
@@ -241,10 +241,10 @@ self.onmessage = function (event) {
         if (timers[label]) {
             const elapsed = performance.now() - timers[label];
             const message = `${label}: ${+elapsed.toFixed(3)}ms`;
-            self.postMessage({ type: 'log', message: [message, ...args].join(' ') });
+            self.postMessage({ type: 'log', message: [message, ...args].join(' '), method: 'timeLog' });
         } else {
             const errorMessage = `No such label: ${label}`;
-            self.postMessage({ type: 'error', message: errorMessage });
+            self.postMessage({ type: 'error', message: errorMessage, method: 'timeLog' });
         }
     };
 
@@ -252,12 +252,12 @@ self.onmessage = function (event) {
     console.timeEnd = (label = 'default', ...args) => {
         if (timers[label]) {
             const elapsed = performance.now() - timers[label];
-            const message = `${label}: ${+elapsed.toFixed(3)}ms - timer ended`;
-            self.postMessage({ type: 'log', message: [message, ...args].join(' ') });
+            const message = `${label}: ${+elapsed.toFixed(3)}ms`;
+            self.postMessage({ type: 'log', message: [message, ...args].join(' '), method: 'timeEnd' });
             delete timers[label]; // Remove the timer
         } else {
             const errorMessage = `No such label: ${label}`;
-            self.postMessage({ type: 'error', message: errorMessage });
+            self.postMessage({ type: 'error', message: errorMessage, method: 'timeEnd' });
         }
     };
 
@@ -269,7 +269,7 @@ self.onmessage = function (event) {
             counts[label] = 1;
         }
         const message = `${label}: ${counts[label]}`;
-        self.postMessage({ type: 'log', message: message });
+        self.postMessage({ type: 'log', message: message, method: 'count' });
     };
 
     // Override console.countReset to reset the count for a label
@@ -278,7 +278,7 @@ self.onmessage = function (event) {
             counts[label] = 0;
         } else {
             const errorMessage = `No such label: ${label}`;
-            self.postMessage({ type: 'error', message: errorMessage });
+            self.postMessage({ type: 'error', message: errorMessage, method: 'countReset' });
         }
     };
 
@@ -286,7 +286,7 @@ self.onmessage = function (event) {
     console.assert = (condition, ...args) => {
         if (!condition) {
             const message = `Assertion failed: ${args.join(' ')}`;
-            self.postMessage({ type: 'error', message: message });
+            self.postMessage({ type: 'error', message: message, method: 'assert' });
         }
     };
 
@@ -354,8 +354,7 @@ self.onmessage = function (event) {
             }
             return formatted.trim(); // Avoid trailing newlines
         }
-        const output = directoryStructure(obj);
-        self.postMessage({ type: 'log', message: output }); // Post message back to the main thread
+        self.postMessage({ type: 'log', message: directoryStructure(obj), method: 'dir' }); // Post message back to the main thread
     };
 
     // Override console.table to log an array/object of objects as a table
@@ -384,7 +383,6 @@ self.onmessage = function (event) {
                 Array.from({ length: maxWidth + (hasValue ? 2 : 1) }, () => null)
             );
             const header = new Map();
-            // const extSpaces = (maxWidth + (hasValue ? 2 : 1)) * 3 + 2;
 
             // Helper function to sort data into primitives, arrays, and objects
             function sortData(data) {
@@ -608,12 +606,12 @@ self.onmessage = function (event) {
             }
             return 0 == D.vLen && (G += g(D, E, F, w, x, z, A, B, C, D.vLen)), G.trim();
         }
-        self.postMessage({ type: 'log', message: generateTable(DataTransformer(data)) });
+        self.postMessage({ type: 'log', method: 'table', message: generateTable(DataTransformer(data)) });
     };
 
     // Override console.clear to clear the console
     console.clear = () => {
-        self.postMessage({ type: 'clear' });
+        self.postMessage({ type: 'clear', method: 'clear' });
     };
 
     // Override fetch to inject mode: 'cors'

@@ -16,7 +16,7 @@ async function main() {
         const data = await response.text();
         const filePath = path.join(__dirname, '../libs/babel/babel.min.js');
         fs.writeFileSync(filePath, data);
-    } catch { e => console.error(e) }
+    } catch { }
 }
 
 main()

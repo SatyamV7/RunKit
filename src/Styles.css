@@ -260,7 +260,7 @@ body {
 .console-message {
     padding: 0.5rem;
     border-radius: 5px;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 500;
     display: flex;
     min-height: 34px;
@@ -298,13 +298,6 @@ body {
 .info,
 .msg {
     color: #007bff;
-}
-
-.undefined {
-    margin: 0;
-    padding: 0;
-    display: none;
-    border: none;
 }
 
 #code {
