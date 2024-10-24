@@ -2,8 +2,10 @@ const fetch = require('node-fetch');
 const fs = require('fs');
 const path = require('path');
 const { minify } = require("terser");
+const testHost = require('./testHostProvider.js');
 
-async function main() {
+module.exports = async function prePush() {
+    testHost(false);
     const unminified = fs.readFileSync(path.join(__dirname, '../src/Executor.js'), 'utf8');
     const unminified2 = fs.readFileSync(path.join(__dirname, '../src/App.js'), 'utf8');
     const result = await minify(unminified, { sourceMap: false });
@@ -16,7 +18,5 @@ async function main() {
         const data = await response.text();
         const filePath = path.join(__dirname, '../libs/babel/babel.min.js');
         fs.writeFileSync(filePath, data);
-    } catch { }
-}
-
-main()
+    } catch (e) { throw e }
+};
