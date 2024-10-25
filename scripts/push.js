@@ -19,7 +19,7 @@ rl.on('line', (line) => {
     } else {
         console.log(`Committing & Pushing with message: '${commitMessage}'...`);
         prePush().then(() => {
-            exec(`git add . && git commit -m '${commitMessage}' && git push`, (err, stdout, stderr) => {
+            exec(`git add . && git commit -m "${commitMessage}" && git push`, (err, stdout, stderr) => {
                 if (err) {
                     console.error(`Error during git operations: ${stderr}`);
                 } else {
