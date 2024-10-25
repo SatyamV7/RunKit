@@ -17,13 +17,11 @@ function findAndReplaceTextInFile(filepath, searchString, replaceString) {
 
 module.exports = function testHost(TESTING_MODE = false) {
     if (TESTING_MODE) {
-        console.log('Testing mode enabled');
         findAndReplaceTextInFile(html, 'App.min.js', 'App.js');
         findAndReplaceTextInFile(js, 'Executor.min.js', 'Executor.js');
         findAndReplaceTextInFile(sw, 'ENABLE_CACHING = true', 'ENABLE_CACHING = false');
 
     } else {
-        console.log('Testing mode disabled');
         findAndReplaceTextInFile(html, 'App.js', 'App.min.js');
         findAndReplaceTextInFile(js, 'Executor.js', 'Executor.min.js');
         findAndReplaceTextInFile(sw, 'ENABLE_CACHING = false', 'ENABLE_CACHING = true');

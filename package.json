@@ -4,7 +4,7 @@
   "main": "",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "push": "node ./scripts/push.js"
+    "push": "node --no-warnings ./scripts/push.js"
   },
   "keywords": [],
   "author": "",

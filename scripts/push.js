@@ -8,7 +8,7 @@ const rl = readline.createInterface({
     prompt: 'Please enter the commit message for your changes:\u00A0',
 });
 
-console.log("Git Automation Utility\nAn empty message aborts the commit\n");
+console.log('Git Automation Utility\nAn empty message aborts the commit\n');
 rl.prompt();
 
 rl.on('line', (line) => {
@@ -17,9 +17,9 @@ rl.on('line', (line) => {
         console.log('Commit operation was cancelled due to empty commit message.');
         rl.close();
     } else {
-        console.log(`Committing & Pushing with message: "${commitMessage}"...`);
+        console.log(`Committing & Pushing with message: '${commitMessage}'...`);
         prePush().then(() => {
-            exec(`git add . && git commit -m "${commitMessage}" && git push`, (err, stdout, stderr) => {
+            exec(`git add . && git commit -m '${commitMessage}' && git push`, (err, stdout, stderr) => {
                 if (err) {
                     console.error(`Error during git operations: ${stderr}`);
                 } else {
