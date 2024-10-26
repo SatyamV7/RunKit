@@ -263,17 +263,14 @@ window.onload = function () {
 
 // IIFE to import library
 (function () {
-    function importLibrary() {
-        fileInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            fileToPlainText(file)
-                .then(PlainText => {
-                    importedLibrary = PlainText;
-                    logToConsole('File Imported Successfully', 'msg');
-                });
-        });
-    };
-    importLibrary();
+    fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        fileToPlainText(file)
+            .then(PlainText => {
+                importedLibrary = PlainText;
+                logToConsole('File Imported Successfully', 'msg');
+            });
+    });
 })();
 
 // Helper function to convert a file to plain text
