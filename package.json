@@ -5,7 +5,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "pre-push": "node --no-warnings ./scripts/pre-push.js",
-    "push": "git-automate --commit --pre-commit=\"npm run pre-push\""
+    "push": "git-automate --commit --push --pre-commit=\"npm run pre-push\""
   },
   "keywords": [],
   "author": "",
