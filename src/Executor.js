@@ -1,5 +1,5 @@
 self.onmessage = function (event) {
-    const { code, ESM, TS, formatCode } = event.data;
+    const { code, ESM, TS, codeFormatting, Babel } = event.data;
 
     performance.mark('executionStarted'); // Mark the start of execution
 
@@ -7,7 +7,7 @@ self.onmessage = function (event) {
 
     function ESMTranspile(code) {
         // Babel imports for ES6 features
-        importScripts('../libs/babel/babel.min.js');
+        importScripts(Babel);
         // Transpile the code using Babel
         return Babel.transform(code, {
             presets: ['env', 'es2015'],
@@ -17,7 +17,7 @@ self.onmessage = function (event) {
 
     function TSTranspile(code) {
         // Babel imports for TypeScript features
-        importScripts('../libs/babel/babel.min.js');
+        importScripts(Babel);
         // Transpile the code using Babel
         return Babel.transform(code, {
             filename: 'script.ts',
@@ -94,7 +94,7 @@ self.onmessage = function (event) {
     // }
 
     // Formatting functions for different types
-    function JavaScriptObject(obj, indentLevel = 1, format = formatCode) {
+    function JavaScriptObject(obj, indentLevel = 1, format = codeFormatting) {
         let indent = format ? '\u00A0'.repeat(indentLevel * 4) : '';
         let formatted = format ? '{\n' : '{ ';
         for (let key in obj) {
@@ -114,7 +114,7 @@ self.onmessage = function (event) {
         return formatted;
     }
 
-    function JavaScriptArray(arr, indentLevel = 1, format = formatCode) {
+    function JavaScriptArray(arr, indentLevel = 1, format = codeFormatting) {
         let indent = format ? '\u00A0'.repeat(indentLevel * 4) : '';
         let formatted = format ? '[\n' : '[';
         for (let i = 0; i < arr.length; i++) {

@@ -16,7 +16,7 @@ let fileHandle;
 
 let _ESM = false;
 let _TS = false;
-let formatCode = false;
+let codeFormatting = false;
 
 const options = {
     types: [
@@ -144,7 +144,7 @@ function executeCode() {
     };
 
     // Send the code to the Executor for execution
-    Executor.postMessage({ code, ESM: _ESM, TS: _TS, formatCode: formatCode });
+    Executor.postMessage({ code, ESM: _ESM, TS: _TS, codeFormatting: codeFormatting, Babel: '../libs/babel/babel.min.js' });
     Executor.onerror = function (error) {
         logToConsole('Worker Error: ' + error.message, 'error');
         isExecuting = false;
@@ -165,7 +165,7 @@ function stopExecution() {
         Executor = new Worker('/src/Executor.min.js'); // Create a new worker instance
         runButton.disabled = false;
         stopButton.disabled = true;
-        logToConsole('Code execution stopped by the user', 'error');
+        alert('Code execution stopped by the user');
     }
 };
 
@@ -268,7 +268,7 @@ window.onload = function () {
         fileToPlainText(file)
             .then(PlainText => {
                 importedLibrary = PlainText;
-                logToConsole('File Imported Successfully', 'msg');
+                alert('Library' + file.name + 'Imported Successfully!');
             });
     });
 })();
