@@ -144,7 +144,7 @@ function executeCode() {
     };
 
     // Send the code to the Executor for execution
-    Executor.postMessage({ code, ESM: _ESM, TS: _TS, codeFormatting: codeFormatting, Babel: '../libs/babel/babel.min.js' });
+    Executor.postMessage({ code, ESM: _ESM, TS: _TS, codeFormatting: codeFormatting, BabelURL: '../libs/babel/babel.min.js' });
     Executor.onerror = function (error) {
         logToConsole('Worker Error: ' + error.message, 'error');
         isExecuting = false;

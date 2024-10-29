@@ -1,17 +1,17 @@
 class Executor {
-    constructor(URL, options = { ESM, TS, codeFormatting: Babel }) {
+    constructor(URL, options = { ESM, TS, codeFormatting: BabelURL }) {
         this.URL = URL || 'https://runkit.netlify.app/src/Executor.min.js';
         this.codeFormatting = options.codeFormatting || false;
         this.ESM = options.ESM || false;
         this.TS = options.TS || false;
-        this.Babel = options.Babel || 'https://unpkg.com/@babel/standalone/babel.min.js';
+        this.BabelURL = options.BabelURL || 'https://unpkg.com/@babel/standalone/babel.min.js';
         this.ExecutorWorker = new Worker(this.URL);
         this.isExecuting = false;
     }
 
     initiateExecution(code) {
         this.isExecuting = true;
-        this.ExecutorWorker.postMessage({ code, ESM: this.ESM, TS: this.TS, codeFormatting: this.codeFormatting, Babel: this.Babel });
+        this.ExecutorWorker.postMessage({ code, ESM: this.ESM, TS: this.TS, codeFormatting: this.codeFormatting, BabelURL: this.BabelURL });
     }
 
     handleResults(callback = data => console.log(data)) {
@@ -36,8 +36,8 @@ class Executor {
         this.codeFormatting = options.codeFormatting || this.codeFormatting;
         this.ESM = options.ESM || this.ESM;
         this.TS = options.TS || this.TS;
-        this.Babel = options.Babel || this.Babel;
-        return { codeFormatting: this.codeFormatting, ESM: this.ESM, TS: this.TS, Babel: this.Babel };
+        this.BabelURL = options.BabelURL || this.BabelURL;
+        return { codeFormatting: this.codeFormatting, ESM: this.ESM, TS: this.TS, BabelURL: this.BabelURL };
     }
 
     executionStatus() {

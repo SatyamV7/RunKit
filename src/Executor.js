@@ -1,5 +1,5 @@
 self.onmessage = function (event) {
-    const { code, ESM, TS, codeFormatting, Babel } = event.data;
+    const { code, ESM, TS, codeFormatting, BabelURL } = event.data;
 
     performance.mark('executionStarted'); // Mark the start of execution
 
@@ -7,7 +7,7 @@ self.onmessage = function (event) {
 
     function ESMTranspile(code) {
         // Babel imports for ES6 features
-        importScripts(Babel);
+        importScripts(BabelURL);
         // Transpile the code using Babel
         return Babel.transform(code, {
             presets: ['env', 'es2015'],
@@ -17,7 +17,7 @@ self.onmessage = function (event) {
 
     function TSTranspile(code) {
         // Babel imports for TypeScript features
-        importScripts(Babel);
+        importScripts(BabelURL);
         // Transpile the code using Babel
         return Babel.transform(code, {
             filename: 'script.ts',
