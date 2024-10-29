@@ -464,6 +464,12 @@ self.onmessage = function (event) {
                 }
             }
 
+            // Sort result based on first value of every sub-array except the first one (The header)
+            result.sort((a, b) => {
+                if (a[0] === b[0]) return 0;
+                return a[0] < b[0] ? -1 : 1;
+            });
+
             return result;
         }
 

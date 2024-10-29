@@ -15,7 +15,7 @@ function findAndReplaceTextInFile(filepath, searchString, replaceString) {
     }
 }
 
-module.exports = function testHost(TESTING_MODE = false) {
+function testHost(TESTING_MODE = false) {
     if (TESTING_MODE) {
         findAndReplaceTextInFile(html, 'App.min.js', 'App.js');
         findAndReplaceTextInFile(js, 'Executor.min.js', 'Executor.js');
@@ -27,3 +27,5 @@ module.exports = function testHost(TESTING_MODE = false) {
         findAndReplaceTextInFile(sw, 'ENABLE_CACHING = false', 'ENABLE_CACHING = true');
     }
 }
+
+process.argv[2] === '--test' ? testHost(true) : testHost(false);
