@@ -9,23 +9,22 @@ function findAndReplaceTextInFile(filepath, searchString, replaceString) {
     try {
         let string = fs.readFileSync(filepath, 'utf8');
         string.includes(searchString) ? fs.writeFileSync(filepath, string.replaceAll(searchString, replaceString)) : null;
-        return true;
     } catch (e) {
         throw e;
     }
 }
 
 function testHost(TESTING_MODE = false) {
+    let preset = { html: ['App.min.js', 'App.js'], js: ['Executor.min.js', 'Executor.js'], sw: ['ENABLE_CACHING = true', 'ENABLE_CACHING = false'] }
     if (TESTING_MODE) {
-        findAndReplaceTextInFile(html, 'App.min.js', 'App.js');
-        findAndReplaceTextInFile(js, 'Executor.min.js', 'Executor.js');
-        findAndReplaceTextInFile(sw, 'ENABLE_CACHING = true', 'ENABLE_CACHING = false');
-
+        findAndReplaceTextInFile(js, ...preset.js);
+        findAndReplaceTextInFile(sw, ...preset.sw);
+        findAndReplaceTextInFile(html, ...preset.html);
     } else {
-        findAndReplaceTextInFile(html, 'App.js', 'App.min.js');
-        findAndReplaceTextInFile(js, 'Executor.js', 'Executor.min.js');
-        findAndReplaceTextInFile(sw, 'ENABLE_CACHING = false', 'ENABLE_CACHING = true');
+        findAndReplaceTextInFile(js, ...preset.js.reverse());
+        findAndReplaceTextInFile(sw, ...preset.sw.reverse());
+        findAndReplaceTextInFile(html, ...preset.html.reverse());
     }
 }
 
-process.argv[2] === '--test' ? testHost(true) : testHost(false);
+process.argv[2] === '--test' ? testHost(true) : process.argv[2] === '--prod' ? testHost(false) : process.exit(1);
