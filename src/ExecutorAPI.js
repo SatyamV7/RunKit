@@ -1,5 +1,5 @@
 class Executor {
-    constructor(URL, options = { ESM, TS, codeFormatting: BabelURL }) {
+    constructor(URL, options = { ESM: false, TS: false, codeFormatting: false, BabelURL: null }) {
         this.URL = URL || 'https://runkit.netlify.app/src/Executor.min.js';
         this.codeFormatting = options.codeFormatting || false;
         this.ESM = options.ESM || false;
@@ -9,38 +9,42 @@ class Executor {
         this.isExecuting = false;
     }
 
-    initiateExecution(code) {
+    execute = (code, callback) => {
         this.isExecuting = true;
         this.ExecutorWorker.postMessage({ code, ESM: this.ESM, TS: this.TS, codeFormatting: this.codeFormatting, BabelURL: this.BabelURL });
-    }
-
-    handleResults(callback = data => console.log(data)) {
         this.ExecutorWorker.onmessage = function (event) {
             this.isExecuting = false;
-            callback(event.data);
+            event.data.method ? callback(event.data, null) : null;
         };
-    }
-
-    handleError(callback = error => console.error(error)) {
         this.ExecutorWorker.onerror = function (error) {
             this.isExecuting = false;
-            callback(error);
+            callback(null, error);
         };
     }
 
-    terminateExecution() {
-        this.isExecuting ? (this.ExecutorWorker.terminate(), this.isExecuting = false) : console.error('No ongoing execution to terminate');
+    terminateExecution = () => {
+        if (this.isExecuting) {
+            this.ExecutorWorker.terminate();
+            this.isExecuting = false;
+        } else {
+            console.error('No ongoing execution to terminate');
+        }
     }
 
-    updateOptions(options) {
-        this.codeFormatting = options.codeFormatting || this.codeFormatting;
-        this.ESM = options.ESM || this.ESM;
-        this.TS = options.TS || this.TS;
-        this.BabelURL = options.BabelURL || this.BabelURL;
-        return { codeFormatting: this.codeFormatting, ESM: this.ESM, TS: this.TS, BabelURL: this.BabelURL };
+    setOptions = ({ ESM, TS, codeFormatting, BabelURL }) => {
+        this.ESM = ESM !== undefined ? ESM : this.ESM;
+        this.TS = TS !== undefined ? TS : this.TS;
+        this.codeFormatting = codeFormatting !== undefined ? codeFormatting : this.codeFormatting;
+        this.BabelURL = BabelURL !== undefined ? BabelURL : this.BabelURL;
     }
 
-    executionStatus() {
-        return this.isExecuting;
+    getOptions = () => { return { codeFormatting: this.codeFormatting, ESM: this.ESM, TS: this.TS, BabelURL: this.BabelURL } };
+
+    terminate = () => {
+        this.ExecutorWorker.terminate();
+        const keys = Object.keys(this);
+        for (let i = 0; i < keys.length; i++) {
+            delete this[keys[i]];
+        }
     }
 }

@@ -276,7 +276,7 @@ body {
     background-color: rgba(0, 0, 0, 0.1);
 }
 
-.console-message>pre {
+pre {
     font-family: JetBrainsMono, 'Courier New', Courier, monospace;
     width: -webkit-fill-available;
     word-wrap: break-word;

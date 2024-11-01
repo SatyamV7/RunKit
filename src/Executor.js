@@ -474,143 +474,575 @@ self.onmessage = function (event) {
         }
 
         // Function to create an ASCII-style table
-        function generateTable(a) {
-            var b = Math.floor;
-            function c(a, b, c, g) {
-                var h, l, m, n, o, p, q, r, s, t, u, v, x, y = [], z = a, A = 0, B = 0;
-                for (h = 0; h < z.length; h++) {
-                    if (0 == h && ("number" == c || "letter" == c)) {
-                        for (y.push([]), ("number" == g || "letter" == g) && ((y[0][0] = { cell: { x: 0, y: 0, colspan: 1, rowspan: 1 }, empty: !0 }), (B = 1)), l = 0; l < z[h].length; l++)
-                            y[0][l + B] = { cell: { x: 0, y: l + B, colspan: 1, rowspan: 1 }, empty: !0 };
-                        A = 1;
-                    }
-                    for (y.push([]), ("number" == g || "letter" == g) && ((y[h + A][0] = { cell: { x: h + A, y: 0, colspan: 1, rowspan: 1 }, empty: !0 }), (B = 1)), l = 0; l < z[h].length; l++)
-                        if (((x = !1), (n = x ? { x: x.row + A, y: x.col + B, colspan: x.colspan, rowspan: x.rowspan } : { x: h + A, y: l + B, colspan: 1, rowspan: 1 }), (o = z[h][l]), !o)) y[h + A][l + B] = { cell: n, empty: !0 };
-                        else {
-                            for (q = 0, p = o.toString().split("\n"), m = 0; m < p.length; m++)
-                                b && (0 !== p[m].indexOf(" ", 0) && (p[m] = " " + p[m]), -1 === p[m].indexOf(" ", p[m].length - 1) && (p[m] += " ")), p[m].length > q && (q = p[m].length);
-                            (t = "left"), (s = "top"), (y[h + A][l + B] = { cell: n, empty: !1, pseudoRows: p, maxWidth: q, vAlign: s, hAlign: t });
+        function generateTable(tableData) {
+            function extractData(tableData, spacePadding, horizontalHeader, verticalHeader) {
+                var i, j, k, cell, item, lines, w, vAlign, hAlign, vLen, hLen, mergedData;
+                var result = [];
+                var arr = tableData;
+                var iOffset = 0;
+                var jOffset = 0;
+                for (i = 0; i < arr.length; i++) {
+                    if (i == 0 && ('number' == horizontalHeader || 'letter' == horizontalHeader)) {
+                        result.push([]);
+                        if ('number' == verticalHeader || 'letter' == verticalHeader) {
+                            //add an empty item that will be replaced later:
+                            result[0][0] = {
+                                cell: {
+                                    x: 0,
+                                    y: 0,
+                                    colspan: 1,
+                                    rowspan: 1
+                                },
+                                empty: true
+                            };
+                            jOffset = 1;
                         }
+                        for (j = 0; j < arr[i].length; j++) {
+                            //add an empty item that will be replaced later:
+                            result[0][j + jOffset] = {
+                                cell: {
+                                    x: 0,
+                                    y: (j + jOffset),
+                                    colspan: 1,
+                                    rowspan: 1
+                                },
+                                empty: true
+                            };
+                        }
+                        iOffset = 1;
+                    }
+                    result.push([]);
+                    if ('number' == verticalHeader || 'letter' == verticalHeader) {
+                        //add an empty item that will be replaced later:
+                        result[i + iOffset][0] = {
+                            cell: {
+                                x: (i + iOffset),
+                                y: 0,
+                                colspan: 1,
+                                rowspan: 1
+                            },
+                            empty: true
+                        };
+                        jOffset = 1;
+                    }
+                    for (j = 0; j < arr[i].length; j++) {
+                        mergedData = false;
+                        if (mergedData) {
+                            cell = {
+                                x: mergedData.row + iOffset,
+                                y: mergedData.col + jOffset,
+                                colspan: mergedData.colspan,
+                                rowspan: mergedData.rowspan
+                            };
+                        } else {
+                            cell = {
+                                x: i + iOffset,
+                                y: j + jOffset,
+                                colspan: 1,
+                                rowspan: 1
+                            };
+                        }
+                        item = arr[i][j];
+                        if (!item) {
+                            result[i + iOffset][j + jOffset] = {
+                                cell: cell,
+                                empty: true
+                            };
+                        } else {
+                            w = 0;
+                            lines = item.split('\n');
+                            for (k = 0; k < lines.length; k++) {
+                                if (spacePadding) {
+                                    if (lines[k].indexOf(' ', 0) !== 0) {
+                                        lines[k] = ' ' + lines[k];
+                                    }
+                                    if (lines[k].indexOf(' ', lines[k].length - 1) === -1) {
+                                        lines[k] = lines[k] + ' ';
+                                    }
+                                }
+                                if (lines[k].length > w) {
+                                    w = lines[k].length;
+                                }
+                            }
+                            hAlign = 'left';
+                            vAlign = 'top';
+                            result[i + iOffset][j + jOffset] = {
+                                cell: cell,
+                                empty: false,
+                                pseudoRows: lines,
+                                maxWidth: w,
+                                vAlign: vAlign,
+                                hAlign: hAlign
+                            };
+                        }
+                    }
                 }
-                if (((u = d(y, h + A - 1, l + B - 1)), (v = e(y, h + A - 1, l + B - 1)), "none" != g && (B = 1), "number" == c || "letter" == c)) for (l = 0; l < v - B; l++) y[0][l + B] = f(0, l + B, c, b, l);
-                if (("none" != c && (A = 1), "number" == g || "letter" == g)) for (h = 0; h < u - A; h++) y[h + A][0] = f(h + A, 0, g, b, h);
-                return { arr: y, vLen: u, hLen: v };
-            }
-            function d(a, b, c) {
-                var d, e, f, g, h = 0;
-                for (d = b; 0 <= d; d--) for (e = 0; e <= c; e++) (f = a[d][e]), f.empty || ((g = f.cell.x + f.cell.rowspan), g > h && (h = g));
-                return h;
-            }
-            function e(a, b, c) {
-                var d, e, f, g, k = 0;
-                for (e = c; 0 <= e; e--) for (d = 0; d <= b; d++) (f = a[d][e]), f.empty || ((g = f.cell.y + f.cell.colspan), g > k && (k = g));
-                return k;
-            }
-            function f(a, c, d, e, f) {
-                var h, i, g = String.fromCharCode, j = "";
-                if ((e && (j += " "), "letter" == d)) {
-                    (i = ""), (h = f);
-                    do (i = g(65 + (h % 26)) + i), (h = b(h / 26) - 1);
-                    while (-1 < h);
-                    j += i;
-                } else j += (f + 1).toString();
-                return e && (j += " "), { cell: { x: a, y: c, colspan: 1, rowspan: 1 }, empty: !1, pseudoRows: [j], maxWidth: j.length, vAlign: "middle", hAlign: "center" };
-            }
-            function g(a, b, c, d, e, f, g, m, n, p) {
-                var i, s, t, u, v, w, x = "";
-                if (-1 == p) {
-                    if (((t = "horizontalTop"), "none" == n.horizontalTop)) return x;
-                } else if (p >= a.vLen - 1) {
-                    if (((t = "horizontalBottom"), "none" == n.horizontalBottom)) return x;
-                } else if (q(a, n, p, g)) t = "horizontalInnerHeader";
-                else if (r(a, n, p)) t = "horizontalInner";
-                else return x;
-                var y = n[t], z = e[f][y].horizontal;
-                for (x += h(a, n, g, m, d, p, -1), i = 0; i < b.length; i++) {
-                    if (((u = !0), -1 < p && ((v = a.arr[p][i]), v.cell.x + v.cell.rowspan - 1 > p && ((u = !1), (w = l(a, c, n, g, p + 1, i) - 1), (x += o(a, w, b, p, i)), (i += v.cell.colspan - 1))), u)) for (s = 0; s < b[i]; s++) x += z;
-                    x += h(a, n, g, m, d, p, i);
+                vLen = getVLen(result, (i + iOffset - 1), (j + jOffset - 1));
+                hLen = getHLen(result, (i + iOffset - 1), (j + jOffset - 1));
+                if ('none' != verticalHeader) {
+                    jOffset = 1;
                 }
-                return 0 == b.length && (x += h(a, n, g, m, d, p, b.length)), (x += "\n"), x;
+                if ('number' == horizontalHeader || 'letter' == horizontalHeader) {
+                    for (j = 0; j < hLen - jOffset; j++) {
+                        result[0][j + jOffset] = generateHeader(0, j + jOffset, horizontalHeader, spacePadding, j);
+                    }
+                }
+                if ('none' != horizontalHeader) {
+                    iOffset = 1;
+                }
+                if ('number' == verticalHeader || 'letter' == verticalHeader) {
+                    for (i = 0; i < vLen - iOffset; i++) {
+                        result[i + iOffset][0] = generateHeader(i + iOffset, 0, verticalHeader, spacePadding, i);
+                    }
+                }
+                return {
+                    arr: result,
+                    vLen: vLen,
+                    hLen: hLen
+                };
             }
-            function h(a, b, c, d, e, f, g) {
-                var h, i, j, k, l, m, n, o, p = "";
-                if (-1 == f) (h = !0), (i = !1), (l = "horizontalTop");
-                else if (f >= a.vLen - 1) (h = !1), (i = !0), (l = "horizontalBottom");
-                else if (((h = !1), (i = !1), q(a, b, f, c))) l = "horizontalInnerHeader";
-                else if (r(a, b, f)) l = "horizontalInner";
-                else return p;
-                if (-1 == g) (j = !0), (k = !1), (n = "verticalLeft");
-                else if (g >= a.hLen - 1) (j = !1), (k = !0), (n = "verticalRight");
-                else if (((j = !1), (k = !1), "none" != d && 0 == g)) n = "verticalInnerHeader";
-                else if (g < a.hLen - 1) n = "verticalInner";
-                else return p;
-                !h && 0 <= g && ((m = a.arr[f][g]), m.cell.y + m.cell.colspan - 1 > g && (h = !0)), !i && 0 <= g && ((m = a.arr[f + 1][g]), m.cell.y + m.cell.colspan - 1 > g && (i = !0)), !j && 0 <= f && ((m = a.arr[f][g]), m.cell.x + m.cell.rowspan - 1 > f && (j = !0)), !k && 0 <= f && ((m = a.arr[f][g + 1]), m.cell.x + m.cell.rowspan - 1 > f && (k = !0));
-                var s = b[l], t = b[n];
-                return (o = e[h ? "none" : t][k ? "none" : s][i ? "none" : t][j ? "none" : s]), (p += o), p;
+
+            function getVLen(arr, vMax, hMax) {
+                var i, j, item, v;
+                var vLen = 0;
+
+                for (i = vMax; i >= 0; i--) {
+                    for (j = 0; j <= hMax; j++) {
+                        item = arr[i][j];
+                        if (!item.empty) {
+                            v = item.cell.x + item.cell.rowspan;
+                            if (v > vLen) {
+                                vLen = v;
+                            }
+                        }
+                    }
+                }
+                return vLen;
             }
-            function l(a, b, c, d, e, f) {
-                var h, i, j, g = Math.ceil;
-                return (
-                    (i = a.arr[a.arr[e][f].cell.x][a.arr[e][f].cell.y]), (j = n(a, c, d, b, i, e)), (h = j.offset), (h += "bottom" == i.vAlign ? i.pseudoRows.length - j.height : "middle" == i.vAlign ? g((i.pseudoRows.length - j.height) / 2) : 0), h
-                );
+
+            function getHLen(arr, vMax, hMax) {
+                var i, j, item, h;
+                var hLen = 0;
+
+                for (j = hMax; j >= 0; j--) {
+                    for (i = 0; i <= vMax; i++) {
+                        item = arr[i][j];
+                        if (!item.empty) {
+                            h = item.cell.y + item.cell.colspan;
+                            if (h > hLen) {
+                                hLen = h;
+                            }
+                        }
+                    }
+                }
+                return hLen;
             }
-            function n(a, b, c, d, e, f) {
-                var g, h, i;
-                for (g = 0, h = d[e.cell.x], i = 1; i < e.cell.rowspan; i++) (h += q(a, b, e.cell.x + i - 1, c) || r(a, b, e.cell.x + i - 1) ? 1 : 0), e.cell.x + i <= f && (g = h), (h += d[e.cell.x + i]);
-                return { height: h, offset: g };
+
+            function generateHeader(i, j, headerType, spacePadding, id) {
+                var str = "";
+                var num, s;
+                if (spacePadding) {
+                    str += ' ';
+                }
+                if ('letter' == headerType) {
+                    s = '';
+                    num = id;
+                    do {
+                        s = String.fromCharCode(65 + (num % 26)) + s;
+                        num = Math.floor(num / 26) - 1;
+                    } while (num > -1);
+                    str += s;
+                } else {
+                    str += (id + 1).toString();
+                }
+                if (spacePadding) {
+                    str += ' ';
+                }
+                return {
+                    cell: {
+                        x: i,
+                        y: j,
+                        colspan: 1,
+                        rowspan: 1
+                    },
+                    empty: false,
+                    pseudoRows: [str],
+                    maxWidth: str.length,
+                    vAlign: 'middle',
+                    hAlign: 'center'
+                };
             }
-            function o(a, c, d, e, f) {
-                var g, h, i, j, l, m = "";
-                for (g = a.arr[a.arr[e][f].cell.x][a.arr[e][f].cell.y], h = p(d, g), j = g.empty ? "" : g.pseudoRows[c] || "", l = "right" == g.hAlign ? h - j.length : "center" == g.hAlign ? b((h - j.length) / 2) : 0, i = 0; i < l; i++) m += " ";
-                for (m += s(j), l = h - j.length - l, i = 0; i < l; i++) m += " ";
-                return m;
+
+            function getWidths(data, spacePadding) {
+                var widths = [];
+                var mergedCells = [];
+                var i, j, w, item, m, a;
+
+                for (j = 0; j < data.hLen; j++) {
+                    w = 0;
+                    if (spacePadding) {
+                        w = 1;
+                    }
+                    for (i = 0; i < data.vLen; i++) {
+                        item = data.arr[i][j];
+                        if (!item.empty) {
+                            if (item.cell.colspan == 1 && item.cell.rowspan == 1) {
+                                if (item.maxWidth > w) {
+                                    w = item.maxWidth;
+                                }
+                            } else if (i == item.cell.x && j == item.cell.y) {
+                                mergedCells.push(item);
+                            }
+                        }
+                    }
+                    widths[j] = w;
+                }
+                return widths;
             }
-            function p(a, b) {
-                var c, d;
-                for (c = a[b.cell.y], d = 1; d < b.cell.colspan; d++) (c += 1), (c += a[b.cell.y + d]);
-                return c;
+
+            function getHeights(data, border, horizontalHeader, spacePadding) {
+                var heights = [];
+                var mergedCells = [];
+                var i, j, h, item;
+
+                for (i = 0; i < data.vLen; i++) {
+                    h = 0;
+                    if (spacePadding) {
+                        h = 1;
+                    }
+                    for (j = 0; j < data.hLen; j++) {
+                        item = data.arr[data.arr[i][j].cell.x][data.arr[i][j].cell.y];
+                        if (!item.empty) {
+                            if (item.cell.colspan == 1 && item.cell.rowspan == 1) {
+                                if (item.pseudoRows.length > h) {
+                                    h = item.pseudoRows.length;
+                                }
+                            } else if (i == item.cell.x && j == item.cell.y) {
+                                mergedCells.push(item);
+                            }
+                        }
+                    }
+                    heights[i] = h;
+                }
+                return heights;
             }
-            function q(a, b, c, d) {
-                return "none" != b.horizontalInnerHeader && "none" != d && 0 == c && 1 < a.vLen;
+
+            function generateSeparationLine(data, widths, heights, unicode, line, charset, horizontalHeader, verticalHeader, border, i) {
+                var j, k, horizontalBorderKey, generateBorder, item, offset;
+                var str = '';
+
+                if (i == -1) {
+                    horizontalBorderKey = 'horizontalTop';
+                    if ('none' == border.horizontalTop) {
+                        return str;
+                    }
+                } else if (i >= data.vLen - 1) {
+                    horizontalBorderKey = 'horizontalBottom';
+                    if ('none' == border.horizontalBottom) {
+                        return str;
+                    }
+                } else {
+                    if (hasHorizontalInnerHeader(data, border, i, horizontalHeader)) {
+                        horizontalBorderKey = 'horizontalInnerHeader';
+                    } else if (hasHorizontalInner(data, border, i)) {
+                        horizontalBorderKey = 'horizontalInner';
+                    } else {
+                        return str;
+                    }
+                }
+                var horizontalBorder = border[horizontalBorderKey];
+                var horizontalChar = line[charset][horizontalBorder].horizontal;
+
+                str += generateIntersection(data, border, horizontalHeader, verticalHeader, unicode, i, -1);
+                for (j = 0; j < widths.length; j++) {
+                    generateBorder = true;
+                    if (i > -1) {
+                        item = data.arr[i][j];
+                        if (item.cell.x + item.cell.rowspan - 1 > i) {
+                            generateBorder = false;
+                            offset = calculateOffset(data, heights, border, horizontalHeader, i + 1, j) - 1;
+                            str += generateCellContent(data, offset, widths, i, j);
+                            j += item.cell.colspan - 1;
+                        }
+                    }
+                    if (generateBorder) {
+                        for (k = 0; k < widths[j]; k++) {
+                            str += horizontalChar;
+                        }
+                    }
+                    str += generateIntersection(data, border, horizontalHeader, verticalHeader, unicode, i, j);
+                }
+                if (widths.length == 0) {
+                    str += generateIntersection(data, border, horizontalHeader, verticalHeader, unicode, i, widths.length);
+                }
+                str += '\n';
+                return str;
             }
-            function r(a, b, c) {
-                return "none" != b.horizontalInner && c < a.vLen - 1;
+
+            function generateIntersection(data, border, horizontalHeader, verticalHeader, unicode, i, j) {
+                var top, bottom, left, right, horizontalBorderKey, item, verticalBorderKey, intersectionChar;
+                var str = '';
+                if (i == -1) {
+                    top = true;
+                    bottom = false;
+                    horizontalBorderKey = 'horizontalTop';
+                } else if (i >= data.vLen - 1) {
+                    top = false;
+                    bottom = true;
+                    horizontalBorderKey = 'horizontalBottom';
+                } else {
+                    top = false;
+                    bottom = false;
+                    if (hasHorizontalInnerHeader(data, border, i, horizontalHeader)) {
+                        horizontalBorderKey = 'horizontalInnerHeader';
+                    } else if (hasHorizontalInner(data, border, i)) {
+                        horizontalBorderKey = 'horizontalInner';
+                    } else {
+                        //unexpected: empty string return statement in generateSeparationLine(...)
+                        return str;
+                    }
+                }
+
+                if (j == -1) {
+                    left = true;
+                    right = false;
+                    verticalBorderKey = 'verticalLeft';
+                } else if (j >= data.hLen - 1) {
+                    left = false;
+                    right = true;
+                    verticalBorderKey = 'verticalRight';
+                } else {
+                    left = false;
+                    right = false;
+                    if ('none' != verticalHeader && j == 0) {
+                        verticalBorderKey = 'verticalInnerHeader';
+                    } else if (j < data.hLen - 1) {
+                        verticalBorderKey = 'verticalInner';
+                    } else {
+                        return str;
+                    }
+                }
+
+                //handle merged cells (modify the values of top, right, bottom, left):
+                if (!top && j >= 0) {
+                    item = data.arr[i][j];
+                    if (item.cell.y + item.cell.colspan - 1 > j) {
+                        top = true;
+                    }
+                }
+                if (!bottom && j >= 0) {
+                    item = data.arr[i + 1][j];
+                    if (item.cell.y + item.cell.colspan - 1 > j) {
+                        bottom = true;
+                    }
+                }
+                if (!left && i >= 0) {
+                    item = data.arr[i][j];
+                    if (item.cell.x + item.cell.rowspan - 1 > i) {
+                        left = true;
+                    }
+                }
+                if (!right && i >= 0) {
+                    item = data.arr[i][j + 1];
+                    if (item.cell.x + item.cell.rowspan - 1 > i) {
+                        right = true;
+                    }
+                }
+
+                var horizontalBorder = border[horizontalBorderKey];
+                var verticalBorder = border[verticalBorderKey];
+                intersectionChar = unicode[(top) ? 'none' : verticalBorder][(right) ? 'none' : horizontalBorder][(bottom) ? 'none' : verticalBorder][(left) ? 'none' : horizontalBorder];
+                str += intersectionChar;
+                return str;
             }
-            function s(a) {
-                return a.replace(/[<>\&]/g, function (a) {
-                    return "&#" + a.charCodeAt(0) + ";";
+
+            function calculateOffset(data, heights, border, horizontalHeader, i, j) {
+                var offset, item, calc;
+                item = data.arr[data.arr[i][j].cell.x][data.arr[i][j].cell.y];
+                calc = calcultateHeight(data, border, horizontalHeader, heights, item, i);
+                offset = calc.offset;
+                if ('bottom' == item.vAlign) {
+                    offset += item.pseudoRows.length - calc.height;
+                } else if ('middle' == item.vAlign) {
+                    offset += Math.ceil((item.pseudoRows.length - calc.height) / 2);
+                } else {
+                    offset += 0;
+                }
+                return offset;
+            }
+
+            function calcultateHeight(data, border, horizontalHeader, heights, item, i) {
+                var offset, height, k;
+                offset = 0;
+                height = heights[item.cell.x];
+                for (k = 1; k < item.cell.rowspan; k++) {
+                    height += (hasHorizontalInnerHeader(data, border, item.cell.x + k - 1, horizontalHeader) || hasHorizontalInner(data, border, item.cell.x + k - 1)) ? 1 : 0;
+                    if (item.cell.x + k <= i) {
+                        offset = height;
+                    }
+                    height += heights[item.cell.x + k];
+                }
+                return {
+                    height: height,
+                    offset: offset
+                };
+            }
+
+            function generateCellContent(data, offset, widths, i, j) {
+                var item, width, k, entry, end;
+                var str = '';
+                item = data.arr[data.arr[i][j].cell.x][data.arr[i][j].cell.y];
+                width = calculateWidth(widths, item);
+                if (item.empty) {
+                    entry = '';
+                } else {
+                    entry = item.pseudoRows[offset] || '';
+                }
+                if ('right' == item.hAlign) {
+                    end = width - entry.length;
+                } else if ('center' == item.hAlign) {
+                    end = Math.floor((width - entry.length) / 2);
+                } else {
+                    end = 0;
+                }
+                for (k = 0; k < end; k++) {
+                    str += ' ';
+                }
+                str += escapeHTMLEntities(entry);
+                end = width - entry.length - end;
+                for (k = 0; k < end; k++) {
+                    str += ' ';
+                }
+                return str;
+            }
+
+            function calculateWidth(widths, item) {
+                var width, k;
+                width = widths[item.cell.y];
+                for (k = 1; k < item.cell.colspan; k++) {
+                    width += 1;
+                    width += widths[item.cell.y + k];
+                }
+                return width;
+            }
+
+            function hasHorizontalInnerHeader(data, border, i, horizontalHeader) {
+                return ('none' != border.horizontalInnerHeader && 'none' != horizontalHeader && i == 0 && data.vLen > 1);
+            }
+
+            function hasHorizontalInner(data, border, i) {
+                return ('none' != border.horizontalInner && i < data.vLen - 1);
+            }
+
+            function escapeHTMLEntities(text) {
+                return text.replace(/[<>\&]/g, function (c) {
+                    return '&#' + c.charCodeAt(0) + ';';
                 });
             }
-            var t, k, u, v, w = {
-                none: { none: { double: { double: "\u2557" } }, double: { none: { double: "\u2550" }, double: { none: "\u2554", double: "\u2566" } } }, double: { none: { none: { double: "\u255D" }, double: { none: "\u2551", double: "\u2563" } }, double: { none: { none: "\u255A", double: "\u2569" }, double: { none: "\u2560", double: "\u256C" } } },
-            }, x = { unicode: { double: { vertical: w.double.none.double.none, horizontal: w.none.double.none.double } } }, y = !0, z = "unicode", A = "first_line", B = "none", C = {
-                horizontalTop: "double", horizontalInnerHeader: "double", horizontalInner: "double", horizontalBottom: "double", verticalLeft: "double", verticalInnerHeader: "double", verticalInner: "double", verticalRight: "double", asciiIntersection: "plus",
-            }, D = c(a, y, A, B), E = (function d(b, c) {
-                var e, f, g, h, k, l, a = [], m = [];
-                for (f = 0; f < b.hLen; f++) {
-                    for (g = 0, c && (g = 1), e = 0; e < b.vLen; e++) (h = b.arr[e][f]), h.empty || (1 == h.cell.colspan && 1 == h.cell.rowspan ? h.maxWidth > g && (g = h.maxWidth) : e == h.cell.x && f == h.cell.y && m.push(h));
-                    a[f] = g;
+
+            var unicode = {
+                none: {
+                    none: {
+                        double: {
+                            double: '╗'
+                        },
+                    },
+                    double: {
+                        none: {
+                            double: '═'
+                        },
+                        double: {
+                            none: '╔',
+                            double: '╦'
+                        },
+                    },
+                },
+                double: {
+                    none: {
+                        none: {
+                            double: '╝'
+                        },
+                        double: {
+                            none: '║',
+                            double: '╣'
+                        },
+                    },
+                    double: {
+                        none: {
+                            none: '╚',
+                            double: '╩'
+                        },
+                        double: {
+                            none: '╠',
+                            double: '╬'
+                        }
+                    }
                 }
-                return a;
-            })(D, y), F = (function f(b, c, d, e) {
-                var g, k, l, n, o, m, a = [], p = [];
-                for (g = 0; g < b.vLen; g++) {
-                    for (l = 0, e && (l = 1), k = 0; k < b.hLen; k++)
-                        (n = b.arr[b.arr[g][k].cell.x][b.arr[g][k].cell.y]), n.empty || (1 == n.cell.colspan && 1 == n.cell.rowspan ? n.pseudoRows.length > l && (l = n.pseudoRows.length) : g == n.cell.x && k == n.cell.y && p.push(n));
-                    a[g] = l;
+            };
+
+            var line = {
+                unicode: {
+                    double: {
+                        vertical: unicode.double.none.double.none,
+                        horizontal: unicode.none.double.none.double
+                    }
                 }
-                return a;
-            })(D, C, A, y), G = "";
-            for (G += g(D, E, F, w, x, z, A, B, C, -1), t = 0; t < D.vLen; t++) {
-                for (v = [], k = 0; k < E.length; k++) v[k] = l(D, F, C, A, t, k);
-                for (u = 0; u < F[t]; u++) {
-                    for (G += x[z][C.verticalLeft].vertical, k = 0; k < E.length; k++)
-                        (G += o(D, v[k] + u, E, t, k)), (k += D.arr[t][k].cell.colspan - 1), "none" != B && 0 == k && 1 < D.hLen ? (G += x[z][C.verticalInnerHeader].vertical) : k < E.length - 1 && (G += x[z][C.verticalInner].vertical);
-                    (G += x[z][C.verticalRight].vertical), (G += "\n");
+            };
+
+            var spacePadding = true;
+            var charset = 'unicode';
+            var horizontalHeader = 'first_line';
+            var verticalHeader = 'none';
+
+            var border = {
+                horizontalTop: 'double',
+                horizontalInnerHeader: 'double',
+                horizontalInner: 'double',
+                horizontalBottom: 'double',
+                verticalLeft: 'double',
+                verticalInnerHeader: 'double',
+                verticalInner: 'double',
+                verticalRight: 'double',
+                asciiIntersection: 'plus'
+            };
+
+            var data = extractData(tableData, spacePadding, horizontalHeader, verticalHeader);
+            var widths = getWidths(data, spacePadding);
+            var heights = getHeights(data, border, horizontalHeader, spacePadding);
+            var str = "";
+            var i, j, m, offsets;
+
+            // top
+            str += generateSeparationLine(data, widths, heights, unicode, line, charset, horizontalHeader, verticalHeader, border, -1);
+
+            // rows
+            for (i = 0; i < data.vLen; i++) {
+                offsets = [];
+                for (j = 0; j < widths.length; j++) {
+                    offsets[j] = calculateOffset(data, heights, border, horizontalHeader, i, j);
                 }
-                G += g(D, E, F, w, x, z, A, B, C, t);
+
+                for (m = 0; m < heights[i]; m++) {
+                    str += line[charset][border.verticalLeft].vertical;
+                    for (j = 0; j < widths.length; j++) {
+                        str += generateCellContent(data, offsets[j] + m, widths, i, j);
+                        j += data.arr[i][j].cell.colspan - 1;
+                        if ('none' != verticalHeader && j == 0 && data.hLen > 1) {
+                            str += line[charset][border.verticalInnerHeader].vertical;
+                        } else if (j < widths.length - 1) {
+                            str += line[charset][border.verticalInner].vertical;
+                        }
+                    }
+                    str += line[charset][border.verticalRight].vertical;
+                    str += '\n';
+                }
+
+                str += generateSeparationLine(data, widths, heights, unicode, line, charset, horizontalHeader, verticalHeader, border, i);
             }
-            return 0 == D.vLen && (G += g(D, E, F, w, x, z, A, B, C, D.vLen)), G.trim();
+            if (data.vLen == 0) {
+                str += generateSeparationLine(data, widths, heights, unicode, line, charset, horizontalHeader, verticalHeader, border, data.vLen);
+            }
+            return str.trim();
         }
         self.postMessage({ type: 'log', method: 'table', message: generateTable(DataTransformer(data)) });
     };
