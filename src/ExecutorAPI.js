@@ -10,25 +10,24 @@ class Executor {
     }
 
     execute = (code, callback) => {
-        this.isExecuting = true;
-        this.ExecutorWorker.postMessage({ code, ESM: this.ESM, TS: this.TS, codeFormatting: this.codeFormatting, BabelURL: this.BabelURL });
-        this.ExecutorWorker.onmessage = function (event) {
-            this.isExecuting = false;
-            event.data.method ? callback(event.data, null) : null;
-        };
-        this.ExecutorWorker.onerror = function (error) {
-            this.isExecuting = false;
-            callback(null, error);
-        };
+        !this.isExecuting ? (
+            this.isExecuting = true,
+            this.ExecutorWorker.postMessage({ code, ESM: this.ESM, TS: this.TS, codeFormatting: this.codeFormatting, BabelURL: this.BabelURL }),
+            this.ExecutorWorker.onmessage = (event) => {
+                this.isExecuting = false;
+                event.data.method ? callback(event.data, null) : null;
+            },
+            this.ExecutorWorker.onerror = (error) => {
+                this.isExecuting = false;
+                callback(null, error);
+            }
+        ) : null;
     }
 
     terminateExecution = () => {
-        if (this.isExecuting) {
-            this.ExecutorWorker.terminate();
-            this.isExecuting = false;
-        } else {
-            console.error('No ongoing execution to terminate');
-        }
+        this.isExecuting
+            ? (this.ExecutorWorker.terminate(), this.isExecuting = false)
+            : console.error('No ongoing execution to terminate');
     }
 
     setOptions = ({ ESM, TS, codeFormatting, BabelURL }) => {
@@ -38,7 +37,7 @@ class Executor {
         this.BabelURL = BabelURL !== undefined ? BabelURL : this.BabelURL;
     }
 
-    getOptions = () => { return { codeFormatting: this.codeFormatting, ESM: this.ESM, TS: this.TS, BabelURL: this.BabelURL } };
+    getOptions = () => ({ codeFormatting: this.codeFormatting, ESM: this.ESM, TS: this.TS, BabelURL: this.BabelURL });
 
     terminate = () => {
         this.ExecutorWorker.terminate();

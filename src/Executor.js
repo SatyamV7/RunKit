@@ -473,7 +473,7 @@ self.onmessage = function (event) {
             return result;
         }
 
-        // Function to create an ASCII-style table
+        // Function to generate an ASCII-style table
         function generateTable(tableData) {
             function extractData(tableData, spacePadding, horizontalHeader, verticalHeader) {
                 var i, j, k, cell, item, lines, w, vAlign, hAlign, vLen, hLen, mergedData;
@@ -550,7 +550,7 @@ self.onmessage = function (event) {
                             };
                         } else {
                             w = 0;
-                            lines = item.split('\n');
+                            lines = item.toString().split('\n');
                             for (k = 0; k < lines.length; k++) {
                                 if (spacePadding) {
                                     if (lines[k].indexOf(' ', 0) !== 0) {
