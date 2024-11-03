@@ -143,38 +143,38 @@ self.onmessage = function (event) {
         // .replace(/\t/g, '\u00A0'.repeat(4)); // Tab Modification (tab --> 4 spaces)
 
         // Handle \uXXXX Unicode escapes
-        str = str.replace(/\u([0-9A-Fa-f]{4})/g, (match, p1) => {
+        str = str.replace(/\\u([0-9A-Fa-f]{4})/g, (match, p1) => {
             return String.fromCharCode(parseInt(p1, 16));
         });
 
         // Handle \u{XXXXX} Unicode escapes
-        str = str.replace(/\u\{([0-9A-Fa-f]+)\}/g, (match, p1) => {
+        str = str.replace(/\\u\{([0-9A-Fa-f]+)\}/g, (match, p1) => {
             return String.fromCodePoint(parseInt(p1, 16));
         });
 
         // Handle \xXX hexadecimal escapes (if needed)
-        str = str.replace(/\x([0-9A-Fa-f]{2})/g, (match, p1) => {
+        str = str.replace(/\\x([0-9A-Fa-f]{2})/g, (match, p1) => {
             return String.fromCharCode(parseInt(p1, 16));
         });
 
         // Handle \XXX octal escapes (if needed)
-        str = str.replace(/\([0-7]{1,3}\)/g, (match, p1) => {
+        str = str.replace(/\\([0-7]{1,3})/g, (match, p1) => {
             return String.fromCharCode(parseInt(p1, 8));
         });
 
-        return str;
+        return String(str);
     }
 
     function JavaScriptNumber(num) {
-        return num;
+        return Number(num);
     }
 
     function JavaScriptBoolean(bool) {
-        return bool;
+        return Boolean(bool);
     }
 
     function JavaScriptBigInt(num) {
-        return `${num}n`;
+        return `${BigInt(num)}n`;
     }
 
     // Master message handler to process different types of messages

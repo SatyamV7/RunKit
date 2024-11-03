@@ -4,8 +4,8 @@
 // Names of the two caches used in this version of the service worker.
 // Change to v2, etc. when you update any of the local resources, which will
 // in turn trigger the install event again.
-const PRECACHE = 'Static_Cache v1.7.7-ProductionBuild';
-const RUNTIME = 'Dynamic_Cache v1.7.7-ProductionBuild';
+const PRECACHE = 'Static_Cache v1.7.8-ProductionBuild';
+const RUNTIME = 'Dynamic_Cache v1.7.8-ProductionBuild';
 
 // Flag to enable or disable caching
 const ENABLE_CACHING = true;
@@ -61,7 +61,7 @@ self.addEventListener('activate', event => {
 // If no response is found, it populates the runtime cache with the response
 // from the network before returning it to the page.
 self.addEventListener('fetch', event => {
-    console.log('Fetch Event');
+    console.log('Fetch Event', event);
     if (ENABLE_CACHING && event.request.url.startsWith(self.location.origin)) {
         event.respondWith(
             caches.match(event.request).then(cachedResponse => {
