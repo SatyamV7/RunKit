@@ -11,6 +11,8 @@ const consoleDiv = document.getElementById('console');
 const fileInputButton = document.querySelector('button#fileInput');
 const saveButton = document.querySelector('button#Save');
 const toggleButton = document.querySelector('input[type="checkbox"]');
+const banner = document.querySelector('p#banner');
+const headerImg = document.querySelector('img#headerImg');
 
 let fileHandle;
 
@@ -26,6 +28,12 @@ const options = {
                 'application/javascript': ['.js'],
             },
         },
+        {
+            description: 'TypeScript',
+            accept: {
+                'application/typescript': ['.ts']
+            }
+        }
     ],
 };
 
@@ -67,6 +75,11 @@ function TS(state) {
         monaco.editor.setModelLanguage(model, language);
     })();
     return _TS;
+}
+
+headerImg.ondblclick = function () {
+    TS(!_TS);
+    _TS ? (banner.innerHTML = banner.innerHTML.replace('Java', 'Type')) : (banner.innerHTML = banner.innerHTML.replace('Type', 'Java'));
 }
 
 // Adding Save & Save As button to the editor's conext menu
@@ -325,7 +338,7 @@ document.addEventListener('DOMContentLoaded', loadCode);
 
 // Constants
 const fileName = 'Script.js';
-const mimeType = 'application/javascript';
+const mimeType = _TS ? 'application/typescript' : 'application/javascript';
 const charset = 'utf-8';
 
 // Function to create a hidden link
