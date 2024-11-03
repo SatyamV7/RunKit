@@ -1,3 +1,5 @@
+let scriptsImported;
+
 self.onmessage = function (event) {
     const { code, ESM, TS, codeFormatting, BabelURL } = event.data;
 
@@ -5,10 +7,12 @@ self.onmessage = function (event) {
 
     let transpiledCode;
 
-    function ESMTranspile(code) {
-        // Babel imports for ES6 features
+    if (!scriptsImported && BabelURL && (ESM || TS)) {
         importScripts(BabelURL);
-        // Transpile the code using Babel
+        scriptsImported = typeof Babel === 'object';
+    }
+
+    function ESMTranspile(code) {
         return Babel.transform(code, {
             presets: ['env', 'es2015'],
             plugins: ['transform-modules-umd']
@@ -16,9 +20,6 @@ self.onmessage = function (event) {
     }
 
     function TSTranspile(code) {
-        // Babel imports for TypeScript features
-        importScripts(BabelURL);
-        // Transpile the code using Babel
         return Babel.transform(code, {
             filename: 'script.ts',
             presets: ['typescript'],
@@ -140,7 +141,6 @@ self.onmessage = function (event) {
             .replace(/\n/g, '\n') // Newline
             .replace(/\r/g, '\r') // Carriage return
             .replace(/\t/g, '\t') // Tab
-        // .replace(/\t/g, '\u00A0'.repeat(4)); // Tab Modification (tab --> 4 spaces)
 
         // Handle \uXXXX Unicode escapes
         str = str.replace(/\\u([0-9A-Fa-f]{4})/g, (match, p1) => {
@@ -183,7 +183,6 @@ self.onmessage = function (event) {
         //     // Wrap the string in single quotes
         //     return { type: typeOfMessage, message: `'${args[0]}'`, typeOf: 'string' };
         // } else {
-        // Process the arguments as before
         let messages = args.map(arg => {
             let message;
             switch (arg.constructor.name) {
