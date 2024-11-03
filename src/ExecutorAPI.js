@@ -21,7 +21,7 @@ class Executor {
                 this.isExecuting = false;
                 callback(null, error);
             }
-        ) : null;
+        ) : console.error('Another exeution ongoing! Wait until ongoing executions ends!');
     }
 
     terminateExecution = () => {
@@ -35,6 +35,7 @@ class Executor {
         this.TS = TS !== undefined ? TS : this.TS;
         this.codeFormatting = codeFormatting !== undefined ? codeFormatting : this.codeFormatting;
         this.BabelURL = BabelURL !== undefined ? BabelURL : this.BabelURL;
+        return { codeFormatting: this.codeFormatting, ESM: this.ESM, TS: this.TS, BabelURL: this.BabelURL };
     }
 
     getOptions = () => ({ codeFormatting: this.codeFormatting, ESM: this.ESM, TS: this.TS, BabelURL: this.BabelURL });
