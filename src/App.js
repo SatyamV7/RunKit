@@ -387,19 +387,16 @@ function checkFileHandleAndUpdateLocalStorage() {
 
 // Function to save code to a file
 (function () {
-    function saveCodeToFile() {
-        saveButton.onclick = async () => {
-            if (fileHandle) {
-                const writable = await fileHandle.createWritable();
-                await writable.write(editor.getValue());
-                await writable.close();
-            } else {
-                saveCodeToNewFile();
-            }
-            checkFileHandleAndUpdateLocalStorage(); // Check fileHandle after file is saved
-        };
-    }
-    saveCodeToFile();
+    saveButton.onclick = async () => {
+        if (fileHandle) {
+            const writable = await fileHandle.createWritable();
+            await writable.write(editor.getValue());
+            await writable.close();
+        } else {
+            saveCodeToNewFile();
+        }
+        checkFileHandleAndUpdateLocalStorage(); // Check fileHandle after file is saved
+    };
 })();
 
 document.addEventListener('keydown', async function (event) {

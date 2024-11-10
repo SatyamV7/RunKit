@@ -96,6 +96,7 @@ self.onmessage = function (event) {
 
     // Formatting functions for different types
     function JavaScriptObject(obj, indentLevel = 1, format = codeFormatting) {
+        if (Object.getOwnPropertyNames(obj).length === 0) return '{}';
         let indent = format ? '\u00A0'.repeat(indentLevel * 4) : '';
         let formatted = format ? '{\n' : '{ ';
         for (let key in obj) {
@@ -116,6 +117,7 @@ self.onmessage = function (event) {
     }
 
     function JavaScriptArray(arr, indentLevel = 1, format = codeFormatting) {
+        if (arr.length === 0) return '[]';
         let indent = format ? '\u00A0'.repeat(indentLevel * 4) : '';
         let formatted = format ? '[\n' : '[';
         for (let i = 0; i < arr.length; i++) {
