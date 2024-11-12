@@ -136,11 +136,16 @@ function executeCode() {
     isExecuting = true;
     runButton.disabled = true;
     stopButton.disabled = false;
+    function escapeHTMLEntities(text) {
+        return text.replace(/[<>\&]/g, function (c) {
+            return '&#' + c.charCodeAt(0) + ';';
+        });
+    }
     // Set up a message handler to receive the results
     Executor.onmessage = function (event) {
         const { type, message, typeOf, method, executionStatus, executionTime } = event.data;
-        type ? logToConsole(message, type, method) : null;
         if (type === 'clear') clearConsole();
+        type ? logToConsole(escapeHTMLEntities(message), type, method) : null;
         // If the worker has started executing the code, disable the runButton
         if (executionStatus === 'executionStarted') {
             isExecuting = true;
@@ -193,7 +198,7 @@ function logToConsole(message, type, method) {
     const messagePreElement = document.createElement('pre');
     messageElement.classList.add('console-message', type);
     messagePreElement.innerHTML = message;
-    if (method === 'table') {
+    if (method === 'console.table') {
         const lnLenArr = [114, 123, 132, 141, 150, 159, 168, 177, 186, 195, 204, 213, 222];
         const LineLength = message.split('\n')[0].length;
         let fontSize = 13;

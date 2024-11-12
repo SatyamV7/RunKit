@@ -213,7 +213,7 @@ self.onmessage = function (event) {
             return message;
         }).join(' ');
         messages = '\u00A0'.repeat(level * 2) + messages.replace(/\u000A/g, '\u000A' + '\u00A0'.repeat(level * 2));
-        return { type: typeOfMessage, message: messages, typeOf: typeof args, method: typeOfMessage };
+        return { type: typeOfMessage, message: messages, typeOf: typeof args, method: 'console.' + typeOfMessage };
         // }
     }
 
@@ -242,10 +242,10 @@ self.onmessage = function (event) {
         if (timers[label]) {
             const elapsed = performance.now() - timers[label];
             const message = `${label}: ${+elapsed.toFixed(3)}ms`;
-            self.postMessage({ type: 'log', message: [message, ...args].join(' '), method: 'timeLog' });
+            self.postMessage({ type: 'log', message: [message, ...args].join(' '), method: 'console.timeLog' });
         } else {
             const errorMessage = `No such label: ${label}`;
-            self.postMessage({ type: 'error', message: errorMessage, method: 'timeLog' });
+            self.postMessage({ type: 'error', message: errorMessage, method: 'console.timeLog' });
         }
     };
 
@@ -254,11 +254,11 @@ self.onmessage = function (event) {
         if (timers[label]) {
             const elapsed = performance.now() - timers[label];
             const message = `${label}: ${+elapsed.toFixed(3)}ms`;
-            self.postMessage({ type: 'log', message: [message, ...args].join(' '), method: 'timeEnd' });
+            self.postMessage({ type: 'log', message: [message, ...args].join(' '), method: 'console.timeEnd' });
             delete timers[label]; // Remove the timer
         } else {
             const errorMessage = `No such label: ${label}`;
-            self.postMessage({ type: 'error', message: errorMessage, method: 'timeEnd' });
+            self.postMessage({ type: 'error', message: errorMessage, method: 'console.timeEnd' });
         }
     };
 
@@ -270,7 +270,7 @@ self.onmessage = function (event) {
             counts[label] = 1;
         }
         const message = `${label}: ${counts[label]}`;
-        self.postMessage({ type: 'log', message: message, method: 'count' });
+        self.postMessage({ type: 'log', message: message, method: 'console.count' });
     };
 
     // Override console.countReset to reset the count for a label
@@ -279,7 +279,7 @@ self.onmessage = function (event) {
             counts[label] = 0;
         } else {
             const errorMessage = `No such label: ${label}`;
-            self.postMessage({ type: 'error', message: errorMessage, method: 'countReset' });
+            self.postMessage({ type: 'error', message: errorMessage, method: 'console.countReset' });
         }
     };
 
@@ -287,7 +287,7 @@ self.onmessage = function (event) {
     console.assert = (condition, ...args) => {
         if (!condition) {
             const message = `Assertion failed: ${args.join(' ')}`;
-            self.postMessage({ type: 'error', message: message, method: 'assert' });
+            self.postMessage({ type: 'error', message: message, method: 'console.assert' });
         }
     };
 
@@ -355,7 +355,7 @@ self.onmessage = function (event) {
             }
             return formatted.trim(); // Avoid trailing newlines
         }
-        self.postMessage({ type: 'log', message: directoryStructure(obj), method: 'dir' }); // Post message back to the main thread
+        self.postMessage({ type: 'log', message: directoryStructure(obj), method: 'console.dir' }); // Post message back to the main thread
     };
 
     // Override console.table to log an array/object of objects as a table
@@ -1045,12 +1045,12 @@ self.onmessage = function (event) {
             }
             return str.trim();
         }
-        self.postMessage({ type: 'log', method: 'table', message: generateTable(DataTransformer(data)) });
+        self.postMessage({ type: 'log', method: 'console.table', message: generateTable(DataTransformer(data)) });
     };
 
     // Override console.clear to clear the console
     console.clear = () => {
-        self.postMessage({ type: 'clear', method: 'clear' });
+        self.postMessage({ type: 'clear', method: 'console.clear' });
     };
 
     // Override fetch to inject mode: 'cors'
@@ -1068,7 +1068,7 @@ self.onmessage = function (event) {
 
         // If the result is not undefined, post it back as a log message
         if (result !== undefined) {
-            self.postMessage({ type: 'log', message: result, typeOf: typeof result });
+            self.postMessage({ type: 'log', message: result, typeOf: typeof result, method: 'globalThis.eval' });
         }
     } catch (error) {
         // Determine error type and post the error message back
