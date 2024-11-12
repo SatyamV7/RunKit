@@ -1,0 +1,27 @@
+name: Update Babel Standalone
+
+on:
+  schedule:
+    # Runs the job daily at midnight (UTC).
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [21.x]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Run JavaScript file
+        run: node --no-warnings scripts/pre-push.js
