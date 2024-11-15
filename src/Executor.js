@@ -98,7 +98,7 @@ self.onmessage = function (event) {
     function JavaScriptObject(obj, indentLevel = 1, format = formatLogs) {
         let indent = format ? '\u00A0'.repeat(indentLevel * 4) : '';
         let className = obj.constructor && obj.constructor.name !== 'Object' ? obj.constructor.name + ' ' : '';
-        if (Object.getOwnPropertyNames(obj).length === 0) return `${className} {}`.trim();
+        if (Object.getOwnPropertyNames(obj).length === 0) return `${className}{}`.trim();
         let ObjectRepresentation = format ? `${className}{\n` : `${className}{ `;
         for (let key in obj) {
             if (obj.hasOwnProperty(key)) {
