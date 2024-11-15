@@ -34,5 +34,3 @@ jobs:
             git add "$TARGET_FILE"
             git commit -m "Update Babel to latest version"
             git push
-          else
-            echo "No changes to commit."
