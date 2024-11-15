@@ -1,7 +1,7 @@
 let scriptsImported;
 
 self.onmessage = function (event) {
-    const { code, ESM, TS, codeFormatting, BabelURL } = event.data;
+    const { code, ESM, TS, formatLogs, BabelURL } = event.data;
 
     performance.mark('executionStarted'); // Mark the start of execution
 
@@ -95,7 +95,7 @@ self.onmessage = function (event) {
     // }
 
     // Formatting functions for different types
-    function JavaScriptObject(obj, indentLevel = 1, format = codeFormatting) {
+    function JavaScriptObject(obj, indentLevel = 1, format = formatLogs) {
         if (Object.getOwnPropertyNames(obj).length === 0) return '{}';
         let indent = format ? '\u00A0'.repeat(indentLevel * 4) : '';
         let formatted = format ? '{\n' : '{ ';
@@ -116,7 +116,7 @@ self.onmessage = function (event) {
         return formatted;
     }
 
-    function JavaScriptArray(arr, indentLevel = 1, format = codeFormatting) {
+    function JavaScriptArray(arr, indentLevel = 1, format = formatLogs) {
         if (arr.length === 0) return '[]';
         let indent = format ? '\u00A0'.repeat(indentLevel * 4) : '';
         let formatted = format ? '[\n' : '[';

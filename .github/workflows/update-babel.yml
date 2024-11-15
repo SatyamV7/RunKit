@@ -1,27 +1,37 @@
-name: Update Babel Standalone
+name: Update Babel
 
 on:
   schedule:
-    # Runs the job daily at midnight (UTC).
-    - cron: '0 0 * * *'
-  workflow_dispatch:
+    - cron: "0 0 * * *"  # Runs every day at midnight (UTC)
+  workflow_dispatch:     # Allows manual triggering of the workflow
 
 jobs:
-  run-script:
+  update-babel:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [21.x]
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'npm'
+      - name: Fetch Latest Babel Version
+        run: |
+          # Define the target directory
+          TARGET_DIR="libs/babel"
+          mkdir -p $TARGET_DIR
+          
+          # Fetch the latest version of Babel and save it to the target file
+          curl -L https://unpkg.com/@babel/standalone/babel.min.js -o $TARGET_DIR/babel.min.js
 
-      - name: Run JavaScript file
-        run: node --no-warnings scripts/pre-push.js
+      - name: Commit and Push Changes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Check if there are changes to commit
+          if [[ `git status --porcelain` ]]; then
+            git config --global user.name "github-actions"
+            git config --global user.email "github-actions@github.com"
+            git add $TARGET_DIR/babel.min.js
+            git commit -m "Update Babel to latest version"
+            git push
+          else
+            echo "No changes to commit."
