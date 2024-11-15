@@ -2,8 +2,8 @@ name: Update Babel
 
 on:
   schedule:
-    - cron: "0 0 * * *"  # Runs every day at midnight (UTC)
-  workflow_dispatch:     # Allows manual triggering of the workflow
+    - cron: "0 0 * * *"  # Runs daily at midnight (UTC)
+  workflow_dispatch:       # Allows manual triggering of the workflow
 
 jobs:
   update-babel:
@@ -15,12 +15,13 @@ jobs:
 
       - name: Fetch Latest Babel Version
         run: |
-          # Define the target directory
+          # Define the target directory and file path
           TARGET_DIR="libs/babel"
+          TARGET_FILE="$TARGET_DIR/babel.min.js"
           mkdir -p $TARGET_DIR
           
           # Fetch the latest version of Babel and save it to the target file
-          curl -L https://unpkg.com/@babel/standalone/babel.min.js -o $TARGET_DIR/babel.min.js
+          curl -L https://unpkg.com/@babel/standalone/babel.min.js -o $TARGET_FILE
 
       - name: Commit and Push Changes
         env:
@@ -30,7 +31,7 @@ jobs:
           if [[ `git status --porcelain` ]]; then
             git config --global user.name "github-actions"
             git config --global user.email "github-actions@github.com"
-            git add $TARGET_DIR/babel.min.js
+            git add $TARGET_FILE
             git commit -m "Update Babel to latest version"
             git push
           else
