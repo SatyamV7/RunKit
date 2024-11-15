@@ -28,10 +28,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Check if there are changes to commit
-          if [[ `git status --porcelain` ]]; then
+          if [[ $(git status --porcelain) ]]; then
             git config --global user.name "github-actions"
             git config --global user.email "github-actions@github.com"
-            git add $TARGET_FILE
+            git add "$TARGET_FILE"
             git commit -m "Update Babel to latest version"
             git push
           else
