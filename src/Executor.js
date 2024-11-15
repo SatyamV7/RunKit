@@ -96,43 +96,52 @@ self.onmessage = function (event) {
 
     // Formatting functions for different types
     function JavaScriptObject(obj, indentLevel = 1, format = formatLogs) {
-        if (Object.getOwnPropertyNames(obj).length === 0) return '{}';
         let indent = format ? '\u00A0'.repeat(indentLevel * 4) : '';
-        let formatted = format ? '{\n' : '{ ';
+        let className = obj.constructor && obj.constructor.name !== 'Object' ? obj.constructor.name + ' ' : '';
+        if (Object.getOwnPropertyNames(obj).length === 0) return `${className} {}`.trim();
+        let ObjectRepresentation = format ? `${className}{\n` : `${className}{ `;
         for (let key in obj) {
             if (obj.hasOwnProperty(key)) {
                 let value = obj[key];
-                if (typeof value === 'string') {
+                if (typeof value === 'function') {
+                    if (className) {
+                        continue;
+                    } else {
+                        value = `[Function: ${key}]`;
+                    }
+                } else if (typeof value === 'string') {
                     value = `'${JavaScriptString(value)}'`;
                 } else if (Array.isArray(value)) {
                     value = JavaScriptArray(value, indentLevel + 1, format);
                 } else if (typeof value === 'object' && value !== null) {
                     value = JavaScriptObject(value, indentLevel + 1, format);
                 }
-                formatted += format ? `${indent}${key}: ${value},\n` : `${key}: ${value}, `;
+                ObjectRepresentation += format ? `${indent}${key}: ${value},\n` : `${key}: ${value}, `;
             }
         }
-        formatted = format ? formatted.slice(0, -2) + `\n${'\u00A0'.repeat((indentLevel - 1) * 4)}}` : formatted.slice(0, -2) + ' }';
-        return formatted;
+        ObjectRepresentation = format ? ObjectRepresentation.slice(0, -2) + `\n${'\u00A0'.repeat((indentLevel - 1) * 4)}}` : ObjectRepresentation.slice(0, -2) + ' }';
+        return ObjectRepresentation.trim();
     }
 
     function JavaScriptArray(arr, indentLevel = 1, format = formatLogs) {
         if (arr.length === 0) return '[]';
         let indent = format ? '\u00A0'.repeat(indentLevel * 4) : '';
-        let formatted = format ? '[\n' : '[';
+        let ArrayRepresentation = format ? '[\n' : '[';
         for (let i = 0; i < arr.length; i++) {
             let value = arr[i];
             if (typeof value === 'string') {
                 value = `'${JavaScriptString(value)}'`;
-            } else if (Array.isArray(value)) {
+            } else if (ArrayRepresentation.isArray(value)) {
                 value = JavaScriptArray(value, indentLevel + 1, format);
             } else if (typeof value === 'object' && value !== null) {
                 value = JavaScriptObject(value, indentLevel + 1, format);
+            } else if (typeof value === 'function') {
+                value = `[Function: ${value.name || 'anonymous'}]`;
             }
-            formatted += format ? `${indent}${value},\n` : `${value}, `;
+            ArrayRepresentation += format ? `${indent}${value},\n` : `${value}, `;
         }
-        formatted = format ? formatted.slice(0, -2) + `\n${'\u00A0'.repeat((indentLevel - 1) * 4)}]` : formatted.slice(0, -2) + ']';
-        return formatted;
+        ArrayRepresentation = format ? ArrayRepresentation.slice(0, -2) + `\n${'\u00A0'.repeat((indentLevel - 1) * 4)}]` : ArrayRepresentation.slice(0, -2) + ']';
+        return ArrayRepresentation.trim();
     }
 
     function JavaScriptString(str) {
@@ -168,43 +177,46 @@ self.onmessage = function (event) {
     }
 
     function JavaScriptNumber(num) {
-        return Number(num);
+        return Number(num).toString();
     }
 
     function JavaScriptBoolean(bool) {
-        return Boolean(bool);
+        return Boolean(bool).toString();
     }
 
     function JavaScriptBigInt(num) {
         return `${BigInt(num)}n`;
     }
 
+    function JavaScriptFunction(func) {
+        return func.toString();
+    }
+
     // Master message handler to process different types of messages
     function masterConsoleHandler(typeOfMessage, ...args) {
-        // if (args.length === 1 && typeof args[0] === 'string') {
-        //     // Wrap the string in single quotes
-        //     return { type: typeOfMessage, message: `'${args[0]}'`, typeOf: 'string' };
-        // } else {
         let messages = args.map(arg => {
             let message;
-            switch (arg.constructor.name) {
-                case 'Array':
-                    message = JavaScriptArray(arg);
-                    break;
-                case 'Object':
-                    message = JavaScriptObject(arg);
-                    break;
-                case 'String':
+            switch (true) {
+                case typeof arg === 'string' && arg instanceof String && arg.constructor.name === 'String':
                     message = JavaScriptString(arg);
                     break;
-                case 'BigInt':
+                case typeof arg === 'bigint' && arg instanceof BigInt && arg.constructor.name === 'BigInt':
                     message = JavaScriptBigInt(arg);
                     break;
-                case 'Number':
+                case typeof arg === 'number' && arg instanceof Number && arg.constructor.name === 'Number':
                     message = JavaScriptNumber(arg);
                     break;
-                case 'Boolean':
+                case typeof arg === 'boolean' && arg instanceof Boolean && arg.constructor.name === 'Boolean':
                     message = JavaScriptBoolean(arg);
+                    break;
+                case typeof arg === 'function' && arg instanceof Function && arg.constructor.name === 'Function':
+                    message = JavaScriptFunction(arg);
+                    break;
+                case Array.isArray(arg) && arg instanceof Array && arg.constructor.name === 'Array':
+                    message = JavaScriptArray(arg);
+                    break;
+                case arg !== null && typeof arg === 'object' && arg instanceof Object:
+                    message = JavaScriptObject(arg);
                     break;
                 default:
                     message = arg;
@@ -214,7 +226,6 @@ self.onmessage = function (event) {
         }).join(' ');
         messages = '\u00A0'.repeat(level * 2) + messages.replace(/\u000A/g, '\u000A' + '\u00A0'.repeat(level * 2));
         return { type: typeOfMessage, message: messages, typeOf: typeof args, method: 'console.' + typeOfMessage };
-        // }
     }
 
     // Override console.log to also post messages back to the main thread
@@ -486,7 +497,6 @@ self.onmessage = function (event) {
                     if (i == 0 && ('number' == horizontalHeader || 'letter' == horizontalHeader)) {
                         result.push([]);
                         if ('number' == verticalHeader || 'letter' == verticalHeader) {
-                            //add an empty item that will be replaced later:
                             result[0][0] = {
                                 cell: {
                                     x: 0,
@@ -499,7 +509,6 @@ self.onmessage = function (event) {
                             jOffset = 1;
                         }
                         for (j = 0; j < arr[i].length; j++) {
-                            //add an empty item that will be replaced later:
                             result[0][j + jOffset] = {
                                 cell: {
                                     x: 0,
@@ -514,7 +523,6 @@ self.onmessage = function (event) {
                     }
                     result.push([]);
                     if ('number' == verticalHeader || 'letter' == verticalHeader) {
-                        //add an empty item that will be replaced later:
                         result[i + iOffset][0] = {
                             cell: {
                                 x: (i + iOffset),
