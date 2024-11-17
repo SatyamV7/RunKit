@@ -144,6 +144,22 @@ self.onmessage = function (event) {
         return ArrayRepresentation.trim();
     }
 
+    function JavaScriptSet(set) {
+        if (set.size === 0) return 'Set(0) {}';
+        const values = Array.from(set).map(value =>
+            typeof value === 'string' ? `'${value}'` : value
+        ).join(', ');
+        return `Set(${set.size}) { ${values} }`;
+    }
+
+    function JavaScriptMap(map) {
+        if (map.size === 0) return 'Map(0) {}';
+        const entries = Array.from(map).map(([key, value]) =>
+            `${typeof key === 'string' ? `'${key}'` : key} => ${typeof value === 'string' ? `'${value}'` : value}`
+        ).join(', ');
+        return `Map(${map.size}) { ${entries} }`;
+    }
+
     function JavaScriptString(str) {
         str = str
             .replace(/\\/g, '\\') // Backslash
@@ -211,6 +227,12 @@ self.onmessage = function (event) {
                     break;
                 case typeof arg === 'function' && arg instanceof Function && arg.constructor.name === 'Function':
                     message = JavaScriptFunction(arg);
+                    break;
+                case arg instanceof Set && arg.constructor.name === 'Set':
+                    message = JavaScriptSet(arg);
+                    break;
+                case arg instanceof Map && arg.constructor.name === 'Map':
+                    message = JavaScriptMap(arg);
                     break;
                 case Array.isArray(arg) && arg instanceof Array && arg.constructor.name === 'Array':
                     message = JavaScriptArray(arg);
