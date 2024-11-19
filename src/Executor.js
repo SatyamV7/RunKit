@@ -1,35 +1,21 @@
-let scriptsImported;
+importScripts('https://unpkg.com/@babel/standalone/babel.min.js')
 
 self.onmessage = function (event) {
-    const { code, ESM, TS, formatLogs, BabelURL } = event.data;
+    const { code, formatLogs, TS } = event.data;
 
     performance.mark('executionStarted'); // Mark the start of execution
 
-    let transpiledCode;
+    function Transpile(code, type) {
+        const options = {
+            filename: type === 'TS' ? 'script.ts' : undefined,
+            presets: type === 'TS' ? ['typescript'] : ['env', 'es2015'],
+            plugins: ['transform-modules-umd'],
+        };
 
-    if (!scriptsImported && BabelURL && (ESM || TS)) {
-        importScripts(BabelURL);
-        scriptsImported = typeof Babel === 'object';
+        return Babel.transform(code, options).code;
     }
 
-    function ESMTranspile(code) {
-        return Babel.transform(code, {
-            presets: ['env', 'es2015'],
-            plugins: ['transform-modules-umd']
-        }).code;
-    }
-
-    function TSTranspile(code) {
-        return Babel.transform(code, {
-            filename: 'script.ts',
-            presets: ['typescript'],
-            plugins: ['transform-modules-umd']
-        }).code;
-    }
-
-    if (ESM === true) transpiledCode = ESMTranspile(code);
-    else if (TS === true) transpiledCode = TSTranspile(code);
-    else transpiledCode = code;
+    const transpiledCode = TS ? Transpile(code, 'TS') : Transpile(code);
 
     // Object to store start times for console.time
     const timers = {};
@@ -40,66 +26,12 @@ self.onmessage = function (event) {
     // Counter to store group level for console.group
     let level = 0;
 
-    // // Function to wrap text to a maximum line length
-    // function wrapText(text, maxLineLength = maxEnvLnLen) {
-    //     if (!text || maxLineLength < 1) return text;
-    //     const lines = [];
-    //     const paragraphs = text.split(/(\n+)/); // Split by newlines, preserving them
-    //     const newlines = [];
-    //     const leadingNewlinesAndWhiteSpaces = text.match(/^[ ]*\n+/) || text.match(/^\n+/); // Capture spaces before newlines or newlines
-    //     const trailingNewlinesAndWhiteSpaces = text.match(/\n[ ]*$/) || text.match(/\n+$/); // Capture spaces after newlines or newlines
-    //     // Store number of newlines encountered between paragraphs
-    //     for (let i = 0; i < paragraphs.length; i++) {
-    //         const part = paragraphs[i];
-    //         if (part.match(/^\n+$/)) {
-    //             newlines.push(part.length); // Track newlines
-    //         } else {
-    //             newlines.push(0); // No newline, just content
-    //         }
-    //     }
-    //     // Process each paragraph separately
-    //     for (let i = 0; i < paragraphs.length; i++) {
-    //         const paragraph = paragraphs[i];
-    //         // Preserve leading newlines (use empty string for first chunk to avoid starting with a newline)
-    //         if (i === 0 && newlines[0] > 0) {
-    //             lines.push('\n'.repeat(newlines[0]));
-    //         }
-    //         if (paragraph.match(/^\n+$/)) continue; // Skip newlines, already tracked
-    //         const words = paragraph.split(/(\s+)/); // Split by spaces, preserving spaces
-    //         let currentLine = '';
-    //         let indent = paragraph.match(/^\s*/)[0]; // Detect and preserve indentation
-    //         for (const word of words) {
-    //             // Check if a single word exceeds the max line length
-    //             if (word.length > maxLineLength) {
-    //                 // Split the word and add newlines between parts
-    //                 for (let j = 0; j < word.length; j += maxLineLength) {
-    //                     lines.push(word.substring(j, j + maxLineLength));
-    //                 }
-    //                 currentLine = ''; // Reset current line after splitting the long word
-    //             } else if (currentLine.length + word.length > maxLineLength) {
-    //                 lines.push(currentLine); // Push current line to the array
-    //                 currentLine = indent + word.trim(); // Start a new line with the current word and indent
-    //             } else {
-    //                 currentLine += word; // Append word to current line
-    //             }
-    //         }
-    //         if (currentLine.trim()) {
-    //             lines.push(currentLine); // Push last line
-    //         }
-    //         // Add the correct number of newlines between paragraphs
-    //         if (i < newlines.length - 1 && newlines[i + 1] > 0 && newlines[i + 1] - 2 >= 0) {
-    //             lines.push('\n'.repeat(newlines[i + 1] - 2));
-    //         }
-    //     }
-    //     return `${leadingNewlinesAndWhiteSpaces ? leadingNewlinesAndWhiteSpaces[0] : ''}${lines.join('\n')}${trailingNewlinesAndWhiteSpaces ? trailingNewlinesAndWhiteSpaces[0] : ''}`;
-    // }
-
     // Formatting functions for different types
     function JavaScriptObject(obj, indentLevel = 1, format = formatLogs) {
         let indent = format ? '\u00A0'.repeat(indentLevel * 4) : '';
-        let className = obj.constructor && obj.constructor.name !== 'Object' ? obj.constructor.name + ' ' : '';
-        if (Object.getOwnPropertyNames(obj).length === 0) return `${className}{}`.trim();
-        let ObjectRepresentation = format ? `${className}{\n` : `${className}{ `;
+        let className = obj.constructor && obj.constructor.name !== 'Object' ? obj.constructor.name : '';
+        if (Object.getOwnPropertyNames(obj).length === 0) return `${className} {}`.trim();
+        let ObjectRepresentation = format ? `${className} {\n` : `${className} { `;
         for (let key in obj) {
             if (obj.hasOwnProperty(key)) {
                 let value = obj[key];
@@ -126,12 +58,12 @@ self.onmessage = function (event) {
     function JavaScriptArray(arr, indentLevel = 1, format = formatLogs) {
         if (arr.length === 0) return '[]';
         let indent = format ? '\u00A0'.repeat(indentLevel * 4) : '';
-        let ArrayRepresentation = format ? '[\n' : '[';
+        let ArrayRepresentation = format ? '[\n' : '[ ';
         for (let i = 0; i < arr.length; i++) {
             let value = arr[i];
             if (typeof value === 'string') {
                 value = `'${JavaScriptString(value)}'`;
-            } else if (ArrayRepresentation.isArray(value)) {
+            } else if (Array.isArray(value)) {
                 value = JavaScriptArray(value, indentLevel + 1, format);
             } else if (typeof value === 'object' && value !== null) {
                 value = JavaScriptObject(value, indentLevel + 1, format);
@@ -140,23 +72,37 @@ self.onmessage = function (event) {
             }
             ArrayRepresentation += format ? `${indent}${value},\n` : `${value}, `;
         }
-        ArrayRepresentation = format ? ArrayRepresentation.slice(0, -2) + `\n${'\u00A0'.repeat((indentLevel - 1) * 4)}]` : ArrayRepresentation.slice(0, -2) + ']';
+        ArrayRepresentation = format ? ArrayRepresentation.slice(0, -2) + `\n${'\u00A0'.repeat((indentLevel - 1) * 4)}]` : ArrayRepresentation.slice(0, -2) + ' ]';
         return ArrayRepresentation.trim();
     }
 
     function JavaScriptSet(set) {
         if (set.size === 0) return 'Set(0) {}';
         const values = Array.from(set).map(value =>
-            typeof value === 'string' ? `'${value}'` : value
+            typeof value === 'string' ? `'${value}'`
+                : Array.isArray(value) ? JavaScriptArray(value)
+                    : typeof value === 'object' ? JavaScriptObject(value)
+                        : typeof value === 'function' ? `[Function: ${value.name || 'anonymous'}]`
+                            : typeof value === 'bigint' ? `${BigInt(value)}n`
+                                : value
         ).join(', ');
         return `Set(${set.size}) { ${values} }`;
     }
 
     function JavaScriptMap(map) {
         if (map.size === 0) return 'Map(0) {}';
-        const entries = Array.from(map).map(([key, value]) =>
-            `${typeof key === 'string' ? `'${key}'` : key} => ${typeof value === 'string' ? `'${value}'` : value}`
-        ).join(', ');
+        const entries = Array.from(map).map(([key, value]) => {
+            const formatData = (data) =>
+                typeof data === 'string' ? `'${data}'`
+                    : Array.isArray(data) ? JavaScriptArray(data)
+                        : typeof data === 'object' ? JavaScriptObject(data)
+                            : typeof data === 'function' ? `[Function: ${data.name || 'anonymous'}]`
+                                : typeof data === 'bigint' ? `${BigInt(data)}n`
+                                    : data;
+            key = formatData(key);
+            value = formatData(value);
+            return `${key} => ${value}`;
+        }).join(', ');
         return `Map(${map.size}) { ${entries} }`;
     }
 

@@ -1,5 +1,5 @@
 class Executor {
-    constructor(URL, options = { ESM: false, TS: false, formatLogs: false, BabelURL: null }) {
+    constructor(URL, options = { TS: false, formatLogs: false }) {
         this.URL = URL || 'https://runkit.netlify.app/src/Executor.min.js';
         this.formatLogs = options.formatLogs || false;
         this.ESM = options.ESM || false;
@@ -12,7 +12,7 @@ class Executor {
     execute = (code, callback) => {
         !this.isExecuting ? (
             this.isExecuting = true,
-            this.ExecutorWorker.postMessage({ code, ESM: this.ESM, TS: this.TS, formatLogs: this.formatLogs, BabelURL: this.BabelURL }),
+            this.ExecutorWorker.postMessage({ code, TS: this.TS, formatLogs: this.formatLogs }),
             this.ExecutorWorker.onmessage = (event) => {
                 this.isExecuting = false;
                 event.data.method ? callback(event.data, null) : null;
@@ -35,10 +35,10 @@ class Executor {
         this.TS = TS !== undefined ? TS : this.TS;
         this.formatLogs = formatLogs !== undefined ? formatLogs : this.formatLogs;
         this.BabelURL = BabelURL !== undefined ? BabelURL : this.BabelURL;
-        return { formatLogs: this.formatLogs, ESM: this.ESM, TS: this.TS, BabelURL: this.BabelURL };
+        return { formatLogs: this.formatLogs, TS: this.TS };
     }
 
-    getOptions = () => ({ formatLogs: this.formatLogs, ESM: this.ESM, TS: this.TS, BabelURL: this.BabelURL });
+    getOptions = () => ({ formatLogs: this.formatLogs, TS: this.TS });
 
     terminate = () => {
         this.ExecutorWorker.terminate();

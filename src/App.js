@@ -16,7 +16,6 @@ const headerImg = document.querySelector('img#headerImg');
 
 let fileHandle;
 
-let _ESM = false;
 let _TS = false;
 let formatLogs = false;
 
@@ -61,14 +60,7 @@ var editor = monaco.editor.create(document.getElementById('editor'), {
 // Create a new Web Worker
 let Executor = new Worker('/src/Executor.min.js');
 
-function ESM(state) {
-    state ? TS(false) : null;
-    _ESM = state;
-    return _ESM;
-}
-
 function TS(state) {
-    state ? ESM(false) : null;
     _TS = state;
     (function (language = state ? 'typescript' : 'javascript') {
         var model = editor.getModel();
@@ -162,7 +154,7 @@ function executeCode() {
     };
 
     // Send the code to the Executor for execution
-    Executor.postMessage({ code, ESM: _ESM, TS: _TS, formatLogs: formatLogs, BabelURL: '../libs/babel/babel.min.js' });
+    Executor.postMessage({ code, TS: _TS, formatLogs: formatLogs });
     Executor.onerror = function (error) {
         logToConsole('Worker Error: ' + error.message, 'error');
         isExecuting = false;

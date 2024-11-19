@@ -5,7 +5,6 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "pre-push": "node --no-warnings ./scripts/pre-push.js",
-    "push": "git-automate --commit --push --pre-commit=\"npm run disable-testing && npm run pre-push\"",
     "enable-testing": "node ./scripts/testHostProvider.js --test",
     "disable-testing": "node ./scripts/testHostProvider.js --prod"
   },
