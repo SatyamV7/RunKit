@@ -1,5 +1,4 @@
-importScripts('https://unpkg.com/@babel/standalone/babel.min.js')
-
+try { importScripts('https://unpkg.com/@babel/standalone/babel.min.js') } catch (error) { console.error(error) }
 self.onmessage = function (event) {
     const { code, formatLogs, TS } = event.data;
 
@@ -12,7 +11,9 @@ self.onmessage = function (event) {
             plugins: ['transform-modules-umd'],
         };
 
-        return Babel.transform(code, options).code;
+        return typeof Babel === 'object' ?
+            Babel.transform(code, options).code
+            : code
     }
 
     const transpiledCode = TS ? Transpile(code, 'TS') : Transpile(code);
