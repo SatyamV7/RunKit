@@ -1,4 +1,5 @@
 try { importScripts('https://unpkg.com/@babel/standalone/babel.min.js') } catch (error) { console.error(error) }
+
 self.onmessage = function (event) {
     const { code, formatLogs, TS } = event.data;
 
@@ -34,7 +35,7 @@ self.onmessage = function (event) {
         if (Object.getOwnPropertyNames(obj).length === 0) return `${className} {}`.trim();
         let ObjectRepresentation = format ? `${className} {\n` : `${className} { `;
         for (let key in obj) {
-            if (obj.hasOwnProperty(key)) {
+            if (Object.prototype.hasOwnProperty.call(obj, key)) {
                 let value = obj[key];
                 if (typeof value === 'function') {
                     if (className) {
@@ -44,6 +45,8 @@ self.onmessage = function (event) {
                     }
                 } else if (typeof value === 'string') {
                     value = `'${JavaScriptString(value)}'`;
+                } else if (typeof value === 'symbol') {
+                    value = value.toString();
                 } else if (Array.isArray(value)) {
                     value = JavaScriptArray(value, indentLevel + 1, format);
                 } else if (typeof value === 'object' && value !== null) {
@@ -310,7 +313,7 @@ self.onmessage = function (event) {
                     formatted += 'Object'; // No newline after Object
                     let isFirstProperty = true;
                     for (let key in obj) {
-                        if (obj.hasOwnProperty(key)) {
+                        if (Object.prototype.hasOwnProperty.call(obj, key)) {
                             if (isFirstProperty) {
                                 formatted += '\n'; // Add newline after the first property
                                 isFirstProperty = false;
