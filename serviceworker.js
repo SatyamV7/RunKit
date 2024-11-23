@@ -67,22 +67,27 @@ const fetchQueue = new Set();
 self.addEventListener('fetch', event => {
     // Background task queue processor
     async function processFetchQueue() {
-        // Process URLs in the task queue sequentially
-        while (fetchQueue.size > 0) {
-            const iterator = fetchQueue.values();
-            const url = iterator.next().value; // Get the first URL in the queue
+        const fetchPromises = [];
+        for (const url of fetchQueue) {
             fetchQueue.delete(url); // Remove the URL from the queue
 
-            try {
-                const response = await fetch(url);
-                if (url.startsWith(self.location.origin) || url.startsWith('https')) {
-                    const cache = await caches.open(RUNTIME);
-                    await cache.put(url, response.clone());
+            const fetchPromise = (async () => {
+                try {
+                    const response = await fetch(url);
+                    if (url.startsWith(self.location.origin) || url.startsWith('https')) {
+                        const cache = await caches.open(RUNTIME);
+                        await cache.put(url, response.clone());
+                    }
+                } catch (error) {
+                    console.error(`Failed to fetch and update cache for ${url}:`, error);
                 }
-            } catch (error) {
-                console.error(`Failed to fetch and update cache for ${url}:`, error);
-            }
+            })();
+
+            fetchPromises.push(fetchPromise);
         }
+
+        // Wait for all fetches to complete
+        await Promise.all(fetchPromises);
     }
 
     if (CACHING) {
