@@ -1,3 +1,6 @@
+self.name = 'Executor.js'; // Worker's Name
+
+// Import Babel Standalone from
 try { importScripts('https://unpkg.com/@babel/standalone/babel.min.js') } catch (error) { console.error(error) }
 
 self.onmessage = function (event) {
@@ -14,10 +17,10 @@ self.onmessage = function (event) {
 
         return typeof Babel === 'object' ?
             Babel.transform(code, options).code
-            : code
+            : code;
     }
 
-    const transpiledCode = TS ? Transpile(code, 'TS') : Transpile(code);
+    const transpiledCode = TS ? Transpile(code, 'TS') : Transpile(code); // Transpilation done here to convert ESM to UMD and Typescript to JavaScript (if TS is set to true)
 
     // Object to store start times for console.time
     const timers = {};

@@ -15,7 +15,7 @@ function findAndReplaceTextInFile(filepath, searchString, replaceString) {
 }
 
 function testHost(TESTING_MODE = false) {
-    let preset = { html: ['App.min.js', 'App.js'], js: ['Executor.min.js', 'Executor.js'], sw: ['ENABLE_CACHING = true', 'ENABLE_CACHING = false'] }
+    let preset = { html: ['App.min.js', 'App.js'], js: ['Executor.min.js', 'Executor.js'], sw: ['CACHING = true', 'CACHING = false'] }
     if (TESTING_MODE) {
         findAndReplaceTextInFile(js, ...preset.js);
         findAndReplaceTextInFile(sw, ...preset.sw);

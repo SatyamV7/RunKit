@@ -1,17 +1,16 @@
 // ServiceWorker V2
 // Made by @SatyamV7 <github.com/SatyamV7>
 // Licensed under Apache License V2
-// Names of the two caches used in this version of the service worker.
-// Change to v2, etc. when you update any of the local resources, which will
-// in turn trigger the install event again.
-const VERSION = 'v1.8.6-ProductionBuild';
+
+// ServiceWorker configuration
+const VERSION = 'v1.8.7-ProductionBuild';
+const CACHING = true; // Enable/Disable caching
+
+// Cache names
 const PRECACHE = `Static_Cache ${VERSION}`;
 const RUNTIME = `Dynamic_Cache ${VERSION}`;
 
-// Flag to enable or disable caching
-const ENABLE_CACHING = true;
-
-// A list of local resources we always want to be cached.
+// URLs to cache
 const PRECACHE_URLS = [
     '/',
     'index.html',
@@ -29,55 +28,93 @@ const PRECACHE_URLS = [
     'assets/fonts/JetBrainsMono-Regular.woff2',
 ];
 
-// The install handler takes care of precaching the resources we always need.
+// Install handler
 self.addEventListener('install', event => {
-    console.log('service worker has been installed');
-    if (ENABLE_CACHING) {
+    if (CACHING) {
         event.waitUntil(
-            caches.open(PRECACHE)
-                .then(cache => cache.addAll(PRECACHE_URLS))
-                .then(self.skipWaiting())
+            caches.open(PRECACHE).then(async cache => {
+                try {
+                    return await cache.addAll(PRECACHE_URLS);
+                } catch (error) {
+                    console.error('Failed to pre-cache resources:', error);
+                }
+            }).then(() => self.skipWaiting())
         );
     }
 });
 
-// The activate handler takes care of cleaning up old caches.
+// Activate handler
 self.addEventListener('activate', event => {
-    console.log('service worker has been activated');
-    if (ENABLE_CACHING) {
+    if (CACHING) {
         const currentCaches = [PRECACHE, RUNTIME];
         event.waitUntil(
-            caches.keys().then(cacheNames => {
-                return cacheNames.filter(cacheName => !currentCaches.includes(cacheName));
-            }).then(cachesToDelete => {
-                return Promise.all(cachesToDelete.map(cacheToDelete => {
-                    return caches.delete(cacheToDelete);
-                }));
-            }).then(() => self.clients.claim())
+            (async () => {
+                const cacheNames = await caches.keys();
+                await Promise.all(
+                    cacheNames.filter(cacheName => !currentCaches.includes(cacheName))
+                        .map(cacheToDelete => caches.delete(cacheToDelete))
+                );
+                self.clients.claim();
+            })()
         );
     }
 });
 
-// The fetch handler serves responses for same-origin resources from a cache.
-// If no response is found, it populates the runtime cache with the response
-// from the network before returning it to the page.
+// Task queue to store URLs that need to be fetched and updated
+const fetchQueue = new Set();
+
+// Fetch handler
 self.addEventListener('fetch', event => {
-    console.log('Fetch Event', event);
-    if (ENABLE_CACHING && event.request.url.startsWith(self.location.origin)) {
+    // Background task queue processor
+    async function processFetchQueue() {
+        // Process URLs in the task queue sequentially
+        while (fetchQueue.size > 0) {
+            const iterator = fetchQueue.values();
+            const url = iterator.next().value; // Get the first URL in the queue
+            fetchQueue.delete(url); // Remove the URL from the queue
+
+            try {
+                const response = await fetch(url);
+                if (url.startsWith(self.location.origin) || url.startsWith('https')) {
+                    const cache = await caches.open(RUNTIME);
+                    await cache.put(url, response.clone());
+                }
+            } catch (error) {
+                console.error(`Failed to fetch and update cache for ${url}:`, error);
+            }
+        }
+    }
+
+    if (CACHING) {
         event.respondWith(
-            caches.match(event.request).then(cachedResponse => {
+            (async () => {
+                // Attempt to fetch the cached response first
+                const cachedResponse = await caches.match(event.request);
+
                 if (cachedResponse) {
+                    // Add the URL to the fetch task queue for background updates
+                    fetchQueue.add(event.request.url);
+
+                    // Trigger background processing of the fetch queue
+                    processFetchQueue();
+
+                    // Return the cached response immediately
                     return cachedResponse;
                 }
-                return caches.open(RUNTIME).then(cache => {
-                    return fetch(event.request).then(response => {
-                        // Put a copy of the response in the runtime cache.
-                        return cache.put(event.request, response.clone()).then(() => {
-                            return response;
-                        });
-                    });
-                });
-            })
+
+                try {
+                    // If no cached response, fetch from the network and cache it
+                    const response = await fetch(event.request);
+                    if (event.request.url.startsWith(self.location.origin)) {
+                        const cache = await caches.open(RUNTIME);
+                        await cache.put(event.request, response.clone());
+                    }
+                    return response;
+                } catch (error) {
+                    console.error(`Failed to fetch ${event.request.url}:`, error);
+                    return caches.match(event.request) || new Response('Network error occurred', { status: 408 });
+                }
+            })()
         );
     }
 });
