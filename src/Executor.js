@@ -37,7 +37,9 @@ self.onmessage = function (event) {
         let className = obj.constructor && obj.constructor.name !== 'Object' ? obj.constructor.name : '';
         if (Object.getOwnPropertyNames(obj).length === 0) return `${className} {}`.trim();
         let ObjectRepresentation = format ? `${className} {\n` : `${className} { `;
-        for (let key in obj) {
+        const keys = [...Object.getOwnPropertyNames(obj), ...Object.getOwnPropertySymbols(obj)]
+        for (let i = 0; i < keys.length; i++) {
+            let key = keys[i];
             if (Object.prototype.hasOwnProperty.call(obj, key)) {
                 let value = obj[key];
                 if (typeof value === 'function') {
@@ -70,6 +72,8 @@ self.onmessage = function (event) {
             let value = arr[i];
             if (typeof value === 'string') {
                 value = `'${JavaScriptString(value)}'`;
+            } else if (typeof value === 'symbol') {
+                value = value.toString();
             } else if (Array.isArray(value)) {
                 value = JavaScriptArray(value, indentLevel + 1, format);
             } else if (typeof value === 'object' && value !== null) {
