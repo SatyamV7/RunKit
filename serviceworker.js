@@ -34,7 +34,13 @@ self.addEventListener('install', event => {
         event.waitUntil(
             caches.open(PRECACHE).then(async cache => {
                 try {
-                    return await cache.addAll(PRECACHE_URLS);
+                    await Promise.all(PRECACHE_URLS.map(async url => {
+                        try {
+                            await cache.add(url);
+                        } catch (error) {
+                            console.error(`Failed to pre-cache resource: ${url}`, error);
+                        }
+                    }));
                 } catch (error) {
                     console.error('Failed to pre-cache resources:', error);
                 }
@@ -62,11 +68,16 @@ self.addEventListener('activate', event => {
 
 // Task queue to store URLs that need to be fetched and updated
 const fetchQueue = new Set();
+let isProcessingQueue = false; // Lock to prevent overlapping processing
+let queueTimer = null;
+const debounceDelay = 2500; // Debounce delay in milliseconds
 
-// Fetch handler
-self.addEventListener('fetch', event => {
-    // Background task queue processor
-    async function processFetchQueue() {
+// Function to process the fetch queue
+async function processFetchQueue() {
+    if (isProcessingQueue) return; // Prevent overlapping execution
+    isProcessingQueue = true;
+
+    try {
         const fetchPromises = [];
         for (const url of fetchQueue) {
             fetchQueue.delete(url); // Remove the URL from the queue
@@ -88,8 +99,21 @@ self.addEventListener('fetch', event => {
 
         // Wait for all fetches to complete
         await Promise.all(fetchPromises);
+    } finally {
+        isProcessingQueue = false; // Release the lock
     }
+}
 
+// Debounce function for fetch queue processing
+function debounceQueueProcessing() {
+    clearTimeout(queueTimer);
+    queueTimer = setTimeout(() => {
+        if (!isProcessingQueue) processFetchQueue();
+    }, debounceDelay);
+}
+
+// Fetch handler
+self.addEventListener('fetch', event => { // Using stale-while-revalidate strategy
     if (CACHING) {
         event.respondWith(
             (async () => {
@@ -100,8 +124,8 @@ self.addEventListener('fetch', event => {
                     // Add the URL to the fetch task queue for background updates
                     fetchQueue.add(event.request.url);
 
-                    // Trigger background processing of the fetch queue
-                    processFetchQueue();
+                    // Trigger debounced background processing of the fetch queue
+                    debounceQueueProcessing();
 
                     // Return the cached response immediately
                     return cachedResponse;
