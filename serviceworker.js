@@ -3,7 +3,7 @@
 // Licensed under Apache License V2
 
 // ServiceWorker configuration
-const VERSION = 'v1.8.8-ProductionBuild';
+const VERSION = 'v1.8.9-ProductionBuild';
 const CACHING = true; // Enable/Disable caching
 
 // Cache names

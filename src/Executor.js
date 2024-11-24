@@ -37,7 +37,7 @@ self.onmessage = function (event) {
         let className = obj.constructor && obj.constructor.name !== 'Object' ? obj.constructor.name : '';
         if (Object.getOwnPropertyNames(obj).length === 0) return `${className} {}`.trim();
         let ObjectRepresentation = format ? `${className} {\n` : `${className} { `;
-        const keys = [...Object.getOwnPropertyNames(obj), ...Object.getOwnPropertySymbols(obj)]
+        const keys = [...Object.getOwnPropertyNames(obj), ...Object.getOwnPropertySymbols(obj).map(symbol => symbol.toString())];
         for (let i = 0; i < keys.length; i++) {
             let key = keys[i];
             if (Object.prototype.hasOwnProperty.call(obj, key)) {
