@@ -11,13 +11,8 @@ const consoleDiv = document.getElementById('console');
 const fileInputButton = document.querySelector('button#fileInput');
 const saveButton = document.querySelector('button#Save');
 const toggleButton = document.querySelector('input[type="checkbox"]');
-const banner = document.querySelector('p#banner');
-const headerImg = document.querySelector('img#headerImg');
 
 let fileHandle;
-
-let _TS = false;
-let formatLogs = false;
 
 const options = {
     types: [
@@ -26,12 +21,6 @@ const options = {
             accept: {
                 'application/javascript': ['.js'],
             },
-        },
-        {
-            description: 'TypeScript',
-            accept: {
-                'application/typescript': ['.ts']
-            }
         }
     ],
 };
@@ -58,21 +47,7 @@ var editor = monaco.editor.create(document.getElementById('editor'), {
 });
 
 // Create a new Web Worker
-let Executor = new Worker('/src/Executor.min.js');
-
-function TS(state) {
-    _TS = state;
-    (function (language = state ? 'typescript' : 'javascript') {
-        var model = editor.getModel();
-        monaco.editor.setModelLanguage(model, language);
-    })();
-    return _TS;
-}
-
-headerImg.ondblclick = function () {
-    TS(!_TS);
-    _TS ? (banner.innerHTML = banner.innerHTML.replace('Java', 'Type')) : (banner.innerHTML = banner.innerHTML.replace('Type', 'Java'));
-}
+let Executor = new Worker('/src/Executor.js');
 
 // Adding Save & Save As button to the editor's conext menu
 
@@ -128,16 +103,13 @@ function executeCode() {
     isExecuting = true;
     runButton.disabled = true;
     stopButton.disabled = false;
-    function escapeHTMLEntities(text) {
-        return text.replace(/[<>\&]/g, function (c) {
-            return '&#' + c.charCodeAt(0) + ';';
-        });
-    }
     // Set up a message handler to receive the results
     Executor.onmessage = function (event) {
-        const { type, message, typeOf, method, executionStatus, executionTime } = event.data;
-        if (type === 'clear') clearConsole();
-        type ? logToConsole(escapeHTMLEntities(message), type, method) : null;
+        const { type, message, method, executionStatus, executionTime } = event.data;
+        if (type === 'clear')
+            clearConsole()
+        else if (type && type !== 'clear')
+            logToConsole(message, type, Function('return' + method)()())
         // If the worker has started executing the code, disable the runButton
         if (executionStatus === 'executionStarted') {
             isExecuting = true;
@@ -154,7 +126,7 @@ function executeCode() {
     };
 
     // Send the code to the Executor for execution
-    Executor.postMessage({ code, TS: _TS, formatLogs: formatLogs });
+    Executor.postMessage({ code, executionID: Date.now() });
     Executor.onerror = function (error) {
         logToConsole('Worker Error: ' + error.message, 'error');
         isExecuting = false;
@@ -172,7 +144,7 @@ function stopExecution() {
     if (Executor) {
         isExecuting = false;
         Executor.terminate(); // Terminate the Executor and log a message to the console
-        Executor = new Worker('/src/Executor.min.js'); // Create a new worker instance
+        Executor = new Worker('/src/Executor.js'); // Create a new worker instance
         runButton.disabled = false;
         stopButton.disabled = true;
         alert('Code execution stopped by the user');
@@ -189,20 +161,8 @@ function logToConsole(message, type, method) {
     const messageElement = document.createElement('div');
     const messagePreElement = document.createElement('pre');
     messageElement.classList.add('console-message', type);
-    messagePreElement.innerHTML = message;
-    if (method === 'console.table') {
-        const lnLenArr = [114, 123, 132, 141, 150, 159, 168, 177, 186, 195, 204, 213, 222];
-        const LineLength = message.split('\n')[0].length;
-        let fontSize = 13;
-        for (let i = 0; i < lnLenArr.length; i++) {
-            if (LineLength <= lnLenArr[i]) {
-                fontSize = 13 - i;
-                break;
-            }
-        }
-        // Apply the calculated font size to the pre element
-        messagePreElement.style.fontSize = `${fontSize}px`;
-    }
+    console.log(method)
+    method === console.table ? messagePreElement.innerHTML = message : method !== console.clear ? messagePreElement.textContent = message : null;
     function copyToClipboard() {
         navigator.clipboard.writeText(message).then(function () {
             alert('Copied to clipboard');
@@ -335,7 +295,7 @@ document.addEventListener('DOMContentLoaded', loadCode);
 
 // Constants
 const fileName = 'Script.js';
-const mimeType = _TS ? 'application/typescript' : 'application/javascript';
+const mimeType = 'application/javascript';
 const charset = 'utf-8';
 
 // Function to create a hidden link

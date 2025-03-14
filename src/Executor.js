@@ -1,26 +1,9 @@
-self.name = 'Executor.js'; // Worker's Name
+importScripts('./TableGenerator.js');
 
-// Import Babel Standalone from
-try { importScripts('https://unpkg.com/@babel/standalone/babel.min.js') } catch (error) { console.error(error) }
-
+// Arbitary Code Executor, Console Overrider & Data Formatter
 self.onmessage = function (event) {
-    const { code, formatLogs, TS } = event.data;
-
-    performance.mark('executionStarted'); // Mark the start of execution
-
-    function Transpile(code, type) {
-        const options = {
-            filename: type === 'TS' ? 'script.ts' : undefined,
-            presets: type === 'TS' ? ['typescript'] : ['env', 'es2015'],
-            plugins: ['transform-modules-umd'],
-        };
-
-        return typeof Babel === 'object' ?
-            Babel.transform(code, options).code
-            : code;
-    }
-
-    const transpiledCode = TS ? Transpile(code, 'TS') : Transpile(code); // Transpilation done here to convert ESM to UMD and Typescript to JavaScript (if TS is set to true)
+    event.data.code = event.data.code.trim();
+    const { code, executionID } = event.data;
 
     // Object to store start times for console.time
     const timers = {};
@@ -31,11 +14,26 @@ self.onmessage = function (event) {
     // Counter to store group level for console.group
     let level = 0;
 
-    // Formatting functions for different types
-    function JavaScriptObject(obj, indentLevel = 1, format = formatLogs) {
+    // Formatting functions for different data types
+    function JavaScriptObject(obj = {}, indentLevel = 1, format = true, visited = new WeakMap()) {
+        if (visited.has(obj)) {
+            return `[Circular]`;
+        }
+        visited.set(obj, true);
+
         let indent = format ? '\u00A0'.repeat(indentLevel * 4) : '';
         let className = obj.constructor && obj.constructor.name !== 'Object' ? obj.constructor.name : '';
-        if (Object.getOwnPropertyNames(obj).length === 0) return `${className} {}`.trim();
+
+        // Handle special objects like DataView, ArrayBuffer, TypedArrays
+        if (obj instanceof DataView) {
+            return `DataView {\n${indent}byteLength: ${obj.byteLength},\n${indent}byteOffset: ${obj.byteOffset},\n${indent}buffer: ${JavaScriptObject(obj.buffer, indentLevel + 1, format, visited)}\n${'\u00A0'.repeat((indentLevel - 1) * 4)}}`;
+        } else if (ArrayBuffer.isView(obj)) {
+            return `${obj.constructor.name}(${obj.length}) [ ${Array.from(obj).join(', ')} ]`;
+        } else if (obj instanceof ArrayBuffer) {
+            return `ArrayBuffer {\n${indent}[Uint8Contents]: <${Array.from(new Uint8Array(obj)).map(byte => byte.toString(16).padStart(2, '0')).join(' ')}>,\n${indent}byteLength: ${obj.byteLength}\n${'\u00A0'.repeat((indentLevel - 1) * 4)}}`;
+        }
+
+        if (Object.getOwnPropertyNames(obj).length === 0 && Object.getOwnPropertySymbols(obj).length === 0) return `${className} {}`.trim();
         let ObjectRepresentation = format ? `${className} {\n` : `${className} { `;
         const keys = [...Object.getOwnPropertyNames(obj), ...Object.getOwnPropertySymbols(obj).map(symbol => symbol.toString())];
         for (let i = 0; i < keys.length; i++) {
@@ -46,16 +44,24 @@ self.onmessage = function (event) {
                     if (className) {
                         continue;
                     } else {
-                        value = `[Function: ${key}]`;
+                        value = JavaScriptFunction(value, true, key);
                     }
                 } else if (typeof value === 'string') {
                     value = `'${JavaScriptString(value)}'`;
                 } else if (typeof value === 'symbol') {
                     value = value.toString();
+                } else if (value instanceof Map && value.constructor.name === 'Map') {
+                    value = JavaScriptMap(value, indentLevel + 1, format, visited);
+                } else if (value instanceof Set && value.constructor.name === 'Set') {
+                    value = JavaScriptSet(value, indentLevel + 1, format, visited);
+                } else if (obj instanceof WeakMap && value.constructor.name === 'WeakMap') {
+                    return JavaScriptWeakMap();
+                } else if (obj instanceof WeakSet && value.constructor.name === 'WeakSet') {
+                    return JavaScriptWeakSet();
                 } else if (Array.isArray(value)) {
-                    value = JavaScriptArray(value, indentLevel + 1, format);
+                    value = JavaScriptArray(value, indentLevel + 1, format, visited);
                 } else if (typeof value === 'object' && value !== null) {
-                    value = JavaScriptObject(value, indentLevel + 1, format);
+                    value = JavaScriptObject(value, indentLevel + 1, format, visited);
                 }
                 ObjectRepresentation += format ? `${indent}${key}: ${value},\n` : `${key}: ${value}, `;
             }
@@ -64,52 +70,83 @@ self.onmessage = function (event) {
         return ObjectRepresentation.trim();
     }
 
-    function JavaScriptArray(arr, indentLevel = 1, format = formatLogs) {
+    function JavaScriptArray(arr = [], indentLevel = 1, format = !true, visited = new WeakMap()) {
+        if (visited.has(arr)) {
+            return `[Circular]`;
+        }
+        visited.set(arr, true);
+
         if (arr.length === 0) return '[]';
         let indent = format ? '\u00A0'.repeat(indentLevel * 4) : '';
-        let ArrayRepresentation = format ? '[\n' : '[ ';
+        let ArrayRepresentation = format ? '[\n' : '[';
         for (let i = 0; i < arr.length; i++) {
             let value = arr[i];
             if (typeof value === 'string') {
                 value = `'${JavaScriptString(value)}'`;
             } else if (typeof value === 'symbol') {
                 value = value.toString();
+            } else if (value instanceof Map && value.constructor.name === 'Map') {
+                value = JavaScriptMap(value, indentLevel + 1, format, visited);
+            } else if (value instanceof Set && value.constructor.name === 'Set') {
+                value = JavaScriptSet(value, indentLevel + 1, format, visited);
+            } else if (value instanceof WeakMap) {
+                value = JavaScriptWeakMap();
+            } else if (value instanceof WeakSet) {
+                value = JavaScriptWeakSet();
             } else if (Array.isArray(value)) {
-                value = JavaScriptArray(value, indentLevel + 1, format);
+                value = JavaScriptArray(value, indentLevel + 1, format, visited);
             } else if (typeof value === 'object' && value !== null) {
-                value = JavaScriptObject(value, indentLevel + 1, format);
+                value = JavaScriptObject(value, indentLevel + 1, format, visited);
             } else if (typeof value === 'function') {
-                value = `[Function: ${value.name || 'anonymous'}]`;
+                value = JavaScriptFunction(value, true, value.name);
             }
             ArrayRepresentation += format ? `${indent}${value},\n` : `${value}, `;
         }
-        ArrayRepresentation = format ? ArrayRepresentation.slice(0, -2) + `\n${'\u00A0'.repeat((indentLevel - 1) * 4)}]` : ArrayRepresentation.slice(0, -2) + ' ]';
+        ArrayRepresentation = format ? ArrayRepresentation.slice(0, -2) + `\n${'\u00A0'.repeat((indentLevel - 1) * 4)}]` : ArrayRepresentation.slice(0, -2) + ']';
         return ArrayRepresentation.trim();
     }
 
-    function JavaScriptSet(set) {
+    function JavaScriptSet(set = new Set(), indentLevel = 1, format = true, visited = new WeakMap()) {
+        if (visited.has(set)) {
+            return `[Circular]`;
+        }
+        visited.set(set, true);
+
         if (set.size === 0) return 'Set(0) {}';
         const values = Array.from(set).map(value =>
             typeof value === 'string' ? `'${value}'`
-                : Array.isArray(value) ? JavaScriptArray(value)
-                    : typeof value === 'object' ? JavaScriptObject(value)
-                        : typeof value === 'function' ? `[Function: ${value.name || 'anonymous'}]`
-                            : typeof value === 'bigint' ? `${BigInt(value)}n`
-                                : value
+                : typeof value === 'bigint' ? `${BigInt(value)}n`
+                    : value instanceof Map && value.constructor.name === 'Map' ? JavaScriptMap(value, indentLevel + 1, format, visited)
+                        : value instanceof Set && value.constructor.name === 'Set' ? JavaScriptSet(value, indentLevel + 1, format, visited)
+                            : value instanceof WeakMap ? JavaScriptWeakMap()
+                                : value instanceof WeakSet ? JavaScriptWeakSet()
+                                    : Array.isArray(value) ? JavaScriptArray(value, indentLevel + 1, format, visited)
+                                        : typeof value === 'object' ? JavaScriptObject(value, indentLevel + 1, format, visited)
+                                            : typeof value === 'function' ? JavaScriptFunction(value, true, value.name)
+                                                : value.toString()
         ).join(', ');
         return `Set(${set.size}) { ${values} }`;
     }
 
-    function JavaScriptMap(map) {
+    function JavaScriptMap(map = new Map(), indentLevel = 1, format = true, visited = new WeakMap()) {
+        if (visited.has(map)) {
+            return `[Circular]`;
+        }
+        visited.set(map, true);
+
         if (map.size === 0) return 'Map(0) {}';
         const entries = Array.from(map).map(([key, value]) => {
-            const formatData = (data) =>
-                typeof data === 'string' ? `'${data}'`
-                    : Array.isArray(data) ? JavaScriptArray(data)
-                        : typeof data === 'object' ? JavaScriptObject(data)
-                            : typeof data === 'function' ? `[Function: ${data.name || 'anonymous'}]`
-                                : typeof data === 'bigint' ? `${BigInt(data)}n`
-                                    : data;
+            const formatData = (value) =>
+                typeof value === 'string' ? `'${value}'`
+                    : typeof value === 'bigint' ? `${BigInt(value)}n`
+                        : value instanceof Map && value.constructor.name === 'Map' ? JavaScriptMap(value, indentLevel + 1, format, visited)
+                            : value instanceof Set && value.constructor.name === 'Set' ? JavaScriptSet(value, indentLevel + 1, format, visited)
+                                : value instanceof WeakMap ? JavaScriptWeakMap()
+                                    : value instanceof WeakSet ? JavaScriptWeakSet()
+                                        : Array.isArray(value) ? JavaScriptArray(value, indentLevel + 1, format, visited)
+                                            : typeof value === 'object' ? JavaScriptObject(value, indentLevel + 1, format, visited)
+                                                : typeof value === 'function' ? JavaScriptFunction(value, true, value.name)
+                                                    : value.toString()
             key = formatData(key);
             value = formatData(value);
             return `${key} => ${value}`;
@@ -117,7 +154,15 @@ self.onmessage = function (event) {
         return `Map(${map.size}) { ${entries} }`;
     }
 
-    function JavaScriptString(str) {
+    function JavaScriptWeakSet() {
+        return 'WeakSet { <items unknown> }';
+    }
+
+    function JavaScriptWeakMap() {
+        return 'WeakMap { <items unknown> }';
+    }
+
+    function JavaScriptString(str = '') {
         str = str
             .replace(/\\/g, '\\') // Backslash
             .replace(/\'/g, '\'') // Single quote
@@ -149,40 +194,42 @@ self.onmessage = function (event) {
         return String(str);
     }
 
-    function JavaScriptNumber(num) {
+    function JavaScriptNumber(num = Number()) {
         return Number(num).toString();
     }
 
-    function JavaScriptBoolean(bool) {
+    function JavaScriptBoolean(bool = Boolean()) {
         return Boolean(bool).toString();
     }
 
-    function JavaScriptBigInt(num) {
+    function JavaScriptBigInt(num = BigInt()) {
         return `${BigInt(num)}n`;
     }
 
-    function JavaScriptFunction(func) {
-        return func.toString();
+    function JavaScriptFunction(fn = Function(), isMinimal = false, symbol) {
+        if (!isMinimal) return fn.toString();
+        const FunctionName = symbol || "(anonymous)";
+        return `[${fn.constructor.name}${FunctionName === "(anonymous)" ? "" : ":"} ${FunctionName}]`;
     }
 
     // Master message handler to process different types of messages
-    function masterConsoleHandler(typeOfMessage, ...args) {
+    function masterConsoleHandler(consoleMethod, ...args) {
         let messages = args.map(arg => {
             let message;
             switch (true) {
-                case typeof arg === 'string' && arg instanceof String && arg.constructor.name === 'String':
+                case typeof arg === 'string' && arg.constructor.name === 'String':
                     message = JavaScriptString(arg);
                     break;
-                case typeof arg === 'bigint' && arg instanceof BigInt && arg.constructor.name === 'BigInt':
+                case typeof arg === 'bigint' && arg.constructor.name === 'BigInt':
                     message = JavaScriptBigInt(arg);
                     break;
-                case typeof arg === 'number' && arg instanceof Number && arg.constructor.name === 'Number':
+                case typeof arg === 'number' && arg.constructor.name === 'Number':
                     message = JavaScriptNumber(arg);
                     break;
-                case typeof arg === 'boolean' && arg instanceof Boolean && arg.constructor.name === 'Boolean':
+                case typeof arg === 'boolean' && arg.constructor.name === 'Boolean':
                     message = JavaScriptBoolean(arg);
                     break;
-                case typeof arg === 'function' && arg instanceof Function && arg.constructor.name === 'Function':
+                case typeof arg === 'function' && arg instanceof Function && (arg.constructor.name === 'Function' || arg.constructor.name === 'AsyncFunction'):
                     message = JavaScriptFunction(arg);
                     break;
                 case arg instanceof Set && arg.constructor.name === 'Set':
@@ -191,6 +238,12 @@ self.onmessage = function (event) {
                 case arg instanceof Map && arg.constructor.name === 'Map':
                     message = JavaScriptMap(arg);
                     break;
+                case arg instanceof WeakMap && arg.constructor.name === 'WeakMap':
+                    message = JavaScriptWeakMap();
+                    break;
+                case arg instanceof WeakSet && arg.constructor.name === 'WeakSet':
+                    message = JavaScriptWeakSet();
+                    break;
                 case Array.isArray(arg) && arg instanceof Array && arg.constructor.name === 'Array':
                     message = JavaScriptArray(arg);
                     break;
@@ -198,13 +251,13 @@ self.onmessage = function (event) {
                     message = JavaScriptObject(arg);
                     break;
                 default:
-                    message = arg;
+                    message = arg.toString();
                     break;
             }
             return message;
         }).join(' ');
         messages = '\u00A0'.repeat(level * 2) + messages.replace(/\u000A/g, '\u000A' + '\u00A0'.repeat(level * 2));
-        return { type: typeOfMessage, message: messages, typeOf: typeof args, method: 'console.' + typeOfMessage };
+        return { type: consoleMethod, message: messages, method: String(`(() => { return console['${consoleMethod}'] })`), executionID };
     }
 
     // Override console.log to also post messages back to the main thread
@@ -232,10 +285,10 @@ self.onmessage = function (event) {
         if (timers[label]) {
             const elapsed = performance.now() - timers[label];
             const message = `${label}: ${+elapsed.toFixed(3)}ms`;
-            self.postMessage({ type: 'log', message: [message, ...args].join(' '), method: 'console.timeLog' });
+            self.postMessage({ type: 'log', message: [message, ...args].join(' '), method: String(() => { return console.timeLog }), executionID });
         } else {
             const errorMessage = `No such label: ${label}`;
-            self.postMessage({ type: 'error', message: errorMessage, method: 'console.timeLog' });
+            self.postMessage({ type: 'error', message: errorMessage, method: String(() => { return console.timeLog }), executionID });
         }
     };
 
@@ -244,11 +297,11 @@ self.onmessage = function (event) {
         if (timers[label]) {
             const elapsed = performance.now() - timers[label];
             const message = `${label}: ${+elapsed.toFixed(3)}ms`;
-            self.postMessage({ type: 'log', message: [message, ...args].join(' '), method: 'console.timeEnd' });
+            self.postMessage({ type: 'log', message: [message, ...args].join(' '), method: String(() => { return console.timeEnd }), executionID });
             delete timers[label]; // Remove the timer
         } else {
             const errorMessage = `No such label: ${label}`;
-            self.postMessage({ type: 'error', message: errorMessage, method: 'console.timeEnd' });
+            self.postMessage({ type: 'error', message: errorMessage, method: String(() => { return console.timeEnd }), executionID });
         }
     };
 
@@ -260,7 +313,7 @@ self.onmessage = function (event) {
             counts[label] = 1;
         }
         const message = `${label}: ${counts[label]}`;
-        self.postMessage({ type: 'log', message: message, method: 'console.count' });
+        self.postMessage({ type: 'log', message: message, method: String(() => { return console.count }), executionID });
     };
 
     // Override console.countReset to reset the count for a label
@@ -269,7 +322,7 @@ self.onmessage = function (event) {
             counts[label] = 0;
         } else {
             const errorMessage = `No such label: ${label}`;
-            self.postMessage({ type: 'error', message: errorMessage, method: 'console.countReset' });
+            self.postMessage({ type: 'error', message: errorMessage, method: String(() => { return console.countReset }), executionID });
         }
     };
 
@@ -277,7 +330,7 @@ self.onmessage = function (event) {
     console.assert = (condition, ...args) => {
         if (!condition) {
             const message = `Assertion failed: ${args.join(' ')}`;
-            self.postMessage({ type: 'error', message: message, method: 'console.assert' });
+            self.postMessage({ type: 'error', message: message, method: String(() => { return console.assert }), executionID });
         }
     };
 
@@ -293,31 +346,30 @@ self.onmessage = function (event) {
 
     // Override console.group to log indented message
     console.group = () => {
-        level++
+        level++;
     };
 
     // Override console.groupEnd to reduce indentation level
     console.groupEnd = () => {
-        level--
+        level--;
     };
 
     // Override console.groupCollapsed to log indented message
     console.groupCollapsed = () => {
-        level++
+        level++;
     };
 
     // Override console.dir to log an object with its properties
     console.dir = (obj) => {
-        function directoryStructure(obj, indentLevel = 0) {
+        function directoryStructure(obj, indentLevel = 1) {
             let indent = '\u00A0'.repeat(indentLevel * 4); // 4 spaces per level
             let formatted = '';
             if (typeof obj === 'object' && obj !== null) {
                 if (Array.isArray(obj)) {
-                    // Format arrays properly
-                    formatted += JavaScriptArray(obj);
+                    formatted += JavaScriptArray(obj, 0, false);
                 } else {
                     // Regular object, format its properties
-                    formatted += 'Object'; // No newline after Object
+                    formatted += 'Object';
                     let isFirstProperty = true;
                     for (let key in obj) {
                         if (Object.prototype.hasOwnProperty.call(obj, key)) {
@@ -326,14 +378,24 @@ self.onmessage = function (event) {
                                 isFirstProperty = false;
                             }
                             let value = obj[key];
-                            if (typeof value === 'object' && value !== null) {
+                            if (value instanceof Set) {
+                                formatted += `${indent}${key}: ${JavaScriptSet(value)}\n`;
+                            } else if (value instanceof Map) {
+                                formatted += `${indent}${key}: ${JavaScriptMap(value)}\n`;
+                            } else if (value instanceof WeakMap) {
+                                formatted += `${indent}${key}: ${JavaScriptWeakMap()}\n`;
+                            } else if (value instanceof WeakSet) {
+                                formatted += `${indent}${key}: ${JavaScriptWeakSet()}\n`;
+                            } else if (value instanceof ArrayBuffer || value instanceof DataView) {
+                                formatted += `${indent}${key}: ${JavaScriptObject(value)}\n`;
+                            } else if (typeof value === 'object' && value !== null) {
                                 formatted += `${indent}${key}: ${directoryStructure(value, indentLevel + 1)}\n`;
                             } else if (typeof value === 'function') {
-                                formatted += `${indent}${key}: ${value.toString()}\n`;
+                                formatted += `${indent}${key}: ${JavaScriptFunction(value, true, key)}\n`;
                             } else if (typeof value === 'string') {
-                                formatted += `${indent}${key}: "${value}"\n`;
+                                formatted += `${indent}${key}: '${value}'\n`;
                             } else {
-                                formatted += `${indent}${key}: ${value}\n`;
+                                formatted += `${indent}${key}: ${value.toString()}\n`;
                             }
                         }
                     }
@@ -345,7 +407,7 @@ self.onmessage = function (event) {
             }
             return formatted.trim(); // Avoid trailing newlines
         }
-        self.postMessage({ type: 'log', message: directoryStructure(obj), method: 'console.dir' }); // Post message back to the main thread
+        self.postMessage({ type: 'log', message: directoryStructure(obj), method: String(() => { return console.dir }), executionID }); // Post message back to the main thread
     };
 
     // Override console.table to log an array/object of objects as a table
@@ -369,9 +431,9 @@ self.onmessage = function (event) {
                 { maxObjectLength: 0, maxArrayLength: 0 }
             );
             const maxWidth = maxObjectLength + maxArrayLength;
-            const hasValue = Object.keys(data).some(key => typeof data[key] !== 'object');
+            const hasPrimitives = Object.keys(data).some(key => typeof data[key] !== 'object');
             const result = Array.from({ length: maxHeight + 1 }, () =>
-                Array.from({ length: maxWidth + (hasValue ? 2 : 1) }, () => null)
+                Array.from({ length: maxWidth + (hasPrimitives ? 2 : 1) }, () => null)
             );
             const header = new Map();
 
@@ -394,26 +456,35 @@ self.onmessage = function (event) {
             }
 
             // Helper function to format data types
-            function formatData(data) {
-                if (typeof data === 'string') return `'${data}'`;
-                if (Array.isArray(data)) return JavaScriptArray(data);
-                if (typeof data === 'object' && data !== null) return JavaScriptObject(data);
-                return data;
+            function formatData(value, key) {
+                if (typeof value === 'string') return `'${value}'`;
+                if (typeof value === 'number') return value.toString();
+                if (typeof value === 'boolean') return value.toString();
+                if (typeof value === 'bigint') return `${value}n`;
+                if (typeof value === 'symbol') return value.toString();
+                if (typeof value === 'function') return JavaScriptFunction(value, true, key);
+                if (Array.isArray(value)) return JavaScriptArray(value);
+                if (value instanceof Set) return JavaScriptSet(value);
+                if (value instanceof Map) return JavaScriptMap(value);
+                if (value instanceof WeakSet) return JavaScriptWeakSet(value);
+                if (value instanceof WeakMap) return JavaScriptWeakMap(value);
+                if (typeof value === 'object' && value !== null) return JavaScriptObject(value);
+                return String(value);
             }
 
             if (maxHeight !== 0) {
                 result[0][0] = '(index)';
-                if (hasValue) result[0][1] = 'Value';
+                if (hasPrimitives) result[0][1] = 'Value';
             }
 
             const { primitives, arrays, objects } = sortData(data);
             let rowIndex = 1;
 
             // Process primitives (non-object values)
-            if (hasValue) {
+            if (hasPrimitives) {
                 Object.keys(primitives).forEach(key => {
                     result[rowIndex][0] = key;
-                    result[rowIndex][1] = formatData(primitives[key]);
+                    result[rowIndex][1] = formatData(primitives[key], key);
                     rowIndex++;
                 });
             }
@@ -422,19 +493,19 @@ self.onmessage = function (event) {
             Object.keys(arrays).forEach(key => {
                 result[rowIndex][0] = key;
                 arrays[key].forEach((item, index) => {
-                    if (result[0][hasValue ? index + 2 : index + 1] === null) {
-                        result[0][hasValue ? index + 2 : index + 1] = index + 1;
+                    if (result[0][hasPrimitives ? index + 2 : index + 1] === null) {
+                        result[0][hasPrimitives ? index + 2 : index + 1] = index + 1;
                     }
-                    result[rowIndex][hasValue ? index + 2 : index + 1] = formatData(item);
+                    result[rowIndex][hasPrimitives ? index + 2 : index + 1] = formatData(item, key);
                 });
                 rowIndex++;
             });
 
-            // Process objects without overriding existing headers
+            // Process objects
             Object.keys(objects).forEach(key => {
                 result[rowIndex][0] = key;
                 const object = objects[key];
-                Object.keys(object).forEach(objectKey => {
+                [...Object.getOwnPropertyNames(object), ...Object.getOwnPropertySymbols(object).map(symbol => symbol.toString())].forEach(objectKey => {
                     let headerIndex = header.get(objectKey) || result[0].indexOf(null);
                     if (headerIndex === -1) {
                         headerIndex = result[0].length;
@@ -443,7 +514,7 @@ self.onmessage = function (event) {
                         result[0][headerIndex] = result[0][headerIndex] || objectKey;
                     }
                     header.set(objectKey, headerIndex);
-                    result[rowIndex][headerIndex] = formatData(object[objectKey]);
+                    result[rowIndex][headerIndex] = formatData(object[objectKey], objectKey);
                 });
                 rowIndex++;
             });
@@ -464,606 +535,33 @@ self.onmessage = function (event) {
             return result;
         }
 
-        // Function to generate an ASCII-style table
-        function generateTable(tableData) {
-            function extractData(tableData, spacePadding, horizontalHeader, verticalHeader) {
-                var i, j, k, cell, item, lines, w, vAlign, hAlign, vLen, hLen, mergedData;
-                var result = [];
-                var arr = tableData;
-                var iOffset = 0;
-                var jOffset = 0;
-                for (i = 0; i < arr.length; i++) {
-                    if (i == 0 && ('number' == horizontalHeader || 'letter' == horizontalHeader)) {
-                        result.push([]);
-                        if ('number' == verticalHeader || 'letter' == verticalHeader) {
-                            result[0][0] = {
-                                cell: {
-                                    x: 0,
-                                    y: 0,
-                                    colspan: 1,
-                                    rowspan: 1
-                                },
-                                empty: true
-                            };
-                            jOffset = 1;
-                        }
-                        for (j = 0; j < arr[i].length; j++) {
-                            result[0][j + jOffset] = {
-                                cell: {
-                                    x: 0,
-                                    y: (j + jOffset),
-                                    colspan: 1,
-                                    rowspan: 1
-                                },
-                                empty: true
-                            };
-                        }
-                        iOffset = 1;
-                    }
-                    result.push([]);
-                    if ('number' == verticalHeader || 'letter' == verticalHeader) {
-                        result[i + iOffset][0] = {
-                            cell: {
-                                x: (i + iOffset),
-                                y: 0,
-                                colspan: 1,
-                                rowspan: 1
-                            },
-                            empty: true
-                        };
-                        jOffset = 1;
-                    }
-                    for (j = 0; j < arr[i].length; j++) {
-                        mergedData = false;
-                        if (mergedData) {
-                            cell = {
-                                x: mergedData.row + iOffset,
-                                y: mergedData.col + jOffset,
-                                colspan: mergedData.colspan,
-                                rowspan: mergedData.rowspan
-                            };
-                        } else {
-                            cell = {
-                                x: i + iOffset,
-                                y: j + jOffset,
-                                colspan: 1,
-                                rowspan: 1
-                            };
-                        }
-                        item = arr[i][j];
-                        if (!item) {
-                            result[i + iOffset][j + jOffset] = {
-                                cell: cell,
-                                empty: true
-                            };
-                        } else {
-                            w = 0;
-                            lines = item.toString().split('\n');
-                            for (k = 0; k < lines.length; k++) {
-                                if (spacePadding) {
-                                    if (lines[k].indexOf(' ', 0) !== 0) {
-                                        lines[k] = ' ' + lines[k];
-                                    }
-                                    if (lines[k].indexOf(' ', lines[k].length - 1) === -1) {
-                                        lines[k] = lines[k] + ' ';
-                                    }
-                                }
-                                if (lines[k].length > w) {
-                                    w = lines[k].length;
-                                }
-                            }
-                            hAlign = 'left';
-                            vAlign = 'top';
-                            result[i + iOffset][j + jOffset] = {
-                                cell: cell,
-                                empty: false,
-                                pseudoRows: lines,
-                                maxWidth: w,
-                                vAlign: vAlign,
-                                hAlign: hAlign
-                            };
-                        }
-                    }
-                }
-                vLen = getVLen(result, (i + iOffset - 1), (j + jOffset - 1));
-                hLen = getHLen(result, (i + iOffset - 1), (j + jOffset - 1));
-                if ('none' != verticalHeader) {
-                    jOffset = 1;
-                }
-                if ('number' == horizontalHeader || 'letter' == horizontalHeader) {
-                    for (j = 0; j < hLen - jOffset; j++) {
-                        result[0][j + jOffset] = generateHeader(0, j + jOffset, horizontalHeader, spacePadding, j);
-                    }
-                }
-                if ('none' != horizontalHeader) {
-                    iOffset = 1;
-                }
-                if ('number' == verticalHeader || 'letter' == verticalHeader) {
-                    for (i = 0; i < vLen - iOffset; i++) {
-                        result[i + iOffset][0] = generateHeader(i + iOffset, 0, verticalHeader, spacePadding, i);
-                    }
-                }
-                return {
-                    arr: result,
-                    vLen: vLen,
-                    hLen: hLen
-                };
-            }
-
-            function getVLen(arr, vMax, hMax) {
-                var i, j, item, v;
-                var vLen = 0;
-
-                for (i = vMax; i >= 0; i--) {
-                    for (j = 0; j <= hMax; j++) {
-                        item = arr[i][j];
-                        if (!item.empty) {
-                            v = item.cell.x + item.cell.rowspan;
-                            if (v > vLen) {
-                                vLen = v;
-                            }
-                        }
-                    }
-                }
-                return vLen;
-            }
-
-            function getHLen(arr, vMax, hMax) {
-                var i, j, item, h;
-                var hLen = 0;
-
-                for (j = hMax; j >= 0; j--) {
-                    for (i = 0; i <= vMax; i++) {
-                        item = arr[i][j];
-                        if (!item.empty) {
-                            h = item.cell.y + item.cell.colspan;
-                            if (h > hLen) {
-                                hLen = h;
-                            }
-                        }
-                    }
-                }
-                return hLen;
-            }
-
-            function generateHeader(i, j, headerType, spacePadding, id) {
-                var str = "";
-                var num, s;
-                if (spacePadding) {
-                    str += ' ';
-                }
-                if ('letter' == headerType) {
-                    s = '';
-                    num = id;
-                    do {
-                        s = String.fromCharCode(65 + (num % 26)) + s;
-                        num = Math.floor(num / 26) - 1;
-                    } while (num > -1);
-                    str += s;
-                } else {
-                    str += (id + 1).toString();
-                }
-                if (spacePadding) {
-                    str += ' ';
-                }
-                return {
-                    cell: {
-                        x: i,
-                        y: j,
-                        colspan: 1,
-                        rowspan: 1
-                    },
-                    empty: false,
-                    pseudoRows: [str],
-                    maxWidth: str.length,
-                    vAlign: 'middle',
-                    hAlign: 'center'
-                };
-            }
-
-            function getWidths(data, spacePadding) {
-                var widths = [];
-                var mergedCells = [];
-                var i, j, w, item, m, a;
-
-                for (j = 0; j < data.hLen; j++) {
-                    w = 0;
-                    if (spacePadding) {
-                        w = 1;
-                    }
-                    for (i = 0; i < data.vLen; i++) {
-                        item = data.arr[i][j];
-                        if (!item.empty) {
-                            if (item.cell.colspan == 1 && item.cell.rowspan == 1) {
-                                if (item.maxWidth > w) {
-                                    w = item.maxWidth;
-                                }
-                            } else if (i == item.cell.x && j == item.cell.y) {
-                                mergedCells.push(item);
-                            }
-                        }
-                    }
-                    widths[j] = w;
-                }
-                return widths;
-            }
-
-            function getHeights(data, border, horizontalHeader, spacePadding) {
-                var heights = [];
-                var mergedCells = [];
-                var i, j, h, item;
-
-                for (i = 0; i < data.vLen; i++) {
-                    h = 0;
-                    if (spacePadding) {
-                        h = 1;
-                    }
-                    for (j = 0; j < data.hLen; j++) {
-                        item = data.arr[data.arr[i][j].cell.x][data.arr[i][j].cell.y];
-                        if (!item.empty) {
-                            if (item.cell.colspan == 1 && item.cell.rowspan == 1) {
-                                if (item.pseudoRows.length > h) {
-                                    h = item.pseudoRows.length;
-                                }
-                            } else if (i == item.cell.x && j == item.cell.y) {
-                                mergedCells.push(item);
-                            }
-                        }
-                    }
-                    heights[i] = h;
-                }
-                return heights;
-            }
-
-            function generateSeparationLine(data, widths, heights, unicode, line, charset, horizontalHeader, verticalHeader, border, i) {
-                var j, k, horizontalBorderKey, generateBorder, item, offset;
-                var str = '';
-
-                if (i == -1) {
-                    horizontalBorderKey = 'horizontalTop';
-                    if ('none' == border.horizontalTop) {
-                        return str;
-                    }
-                } else if (i >= data.vLen - 1) {
-                    horizontalBorderKey = 'horizontalBottom';
-                    if ('none' == border.horizontalBottom) {
-                        return str;
-                    }
-                } else {
-                    if (hasHorizontalInnerHeader(data, border, i, horizontalHeader)) {
-                        horizontalBorderKey = 'horizontalInnerHeader';
-                    } else if (hasHorizontalInner(data, border, i)) {
-                        horizontalBorderKey = 'horizontalInner';
-                    } else {
-                        return str;
-                    }
-                }
-                var horizontalBorder = border[horizontalBorderKey];
-                var horizontalChar = line[charset][horizontalBorder].horizontal;
-
-                str += generateIntersection(data, border, horizontalHeader, verticalHeader, unicode, i, -1);
-                for (j = 0; j < widths.length; j++) {
-                    generateBorder = true;
-                    if (i > -1) {
-                        item = data.arr[i][j];
-                        if (item.cell.x + item.cell.rowspan - 1 > i) {
-                            generateBorder = false;
-                            offset = calculateOffset(data, heights, border, horizontalHeader, i + 1, j) - 1;
-                            str += generateCellContent(data, offset, widths, i, j);
-                            j += item.cell.colspan - 1;
-                        }
-                    }
-                    if (generateBorder) {
-                        for (k = 0; k < widths[j]; k++) {
-                            str += horizontalChar;
-                        }
-                    }
-                    str += generateIntersection(data, border, horizontalHeader, verticalHeader, unicode, i, j);
-                }
-                if (widths.length == 0) {
-                    str += generateIntersection(data, border, horizontalHeader, verticalHeader, unicode, i, widths.length);
-                }
-                str += '\n';
-                return str;
-            }
-
-            function generateIntersection(data, border, horizontalHeader, verticalHeader, unicode, i, j) {
-                var top, bottom, left, right, horizontalBorderKey, item, verticalBorderKey, intersectionChar;
-                var str = '';
-                if (i == -1) {
-                    top = true;
-                    bottom = false;
-                    horizontalBorderKey = 'horizontalTop';
-                } else if (i >= data.vLen - 1) {
-                    top = false;
-                    bottom = true;
-                    horizontalBorderKey = 'horizontalBottom';
-                } else {
-                    top = false;
-                    bottom = false;
-                    if (hasHorizontalInnerHeader(data, border, i, horizontalHeader)) {
-                        horizontalBorderKey = 'horizontalInnerHeader';
-                    } else if (hasHorizontalInner(data, border, i)) {
-                        horizontalBorderKey = 'horizontalInner';
-                    } else {
-                        //unexpected: empty string return statement in generateSeparationLine(...)
-                        return str;
-                    }
-                }
-
-                if (j == -1) {
-                    left = true;
-                    right = false;
-                    verticalBorderKey = 'verticalLeft';
-                } else if (j >= data.hLen - 1) {
-                    left = false;
-                    right = true;
-                    verticalBorderKey = 'verticalRight';
-                } else {
-                    left = false;
-                    right = false;
-                    if ('none' != verticalHeader && j == 0) {
-                        verticalBorderKey = 'verticalInnerHeader';
-                    } else if (j < data.hLen - 1) {
-                        verticalBorderKey = 'verticalInner';
-                    } else {
-                        return str;
-                    }
-                }
-
-                //handle merged cells (modify the values of top, right, bottom, left):
-                if (!top && j >= 0) {
-                    item = data.arr[i][j];
-                    if (item.cell.y + item.cell.colspan - 1 > j) {
-                        top = true;
-                    }
-                }
-                if (!bottom && j >= 0) {
-                    item = data.arr[i + 1][j];
-                    if (item.cell.y + item.cell.colspan - 1 > j) {
-                        bottom = true;
-                    }
-                }
-                if (!left && i >= 0) {
-                    item = data.arr[i][j];
-                    if (item.cell.x + item.cell.rowspan - 1 > i) {
-                        left = true;
-                    }
-                }
-                if (!right && i >= 0) {
-                    item = data.arr[i][j + 1];
-                    if (item.cell.x + item.cell.rowspan - 1 > i) {
-                        right = true;
-                    }
-                }
-
-                var horizontalBorder = border[horizontalBorderKey];
-                var verticalBorder = border[verticalBorderKey];
-                intersectionChar = unicode[(top) ? 'none' : verticalBorder][(right) ? 'none' : horizontalBorder][(bottom) ? 'none' : verticalBorder][(left) ? 'none' : horizontalBorder];
-                str += intersectionChar;
-                return str;
-            }
-
-            function calculateOffset(data, heights, border, horizontalHeader, i, j) {
-                var offset, item, calc;
-                item = data.arr[data.arr[i][j].cell.x][data.arr[i][j].cell.y];
-                calc = calcultateHeight(data, border, horizontalHeader, heights, item, i);
-                offset = calc.offset;
-                if ('bottom' == item.vAlign) {
-                    offset += item.pseudoRows.length - calc.height;
-                } else if ('middle' == item.vAlign) {
-                    offset += Math.ceil((item.pseudoRows.length - calc.height) / 2);
-                } else {
-                    offset += 0;
-                }
-                return offset;
-            }
-
-            function calcultateHeight(data, border, horizontalHeader, heights, item, i) {
-                var offset, height, k;
-                offset = 0;
-                height = heights[item.cell.x];
-                for (k = 1; k < item.cell.rowspan; k++) {
-                    height += (hasHorizontalInnerHeader(data, border, item.cell.x + k - 1, horizontalHeader) || hasHorizontalInner(data, border, item.cell.x + k - 1)) ? 1 : 0;
-                    if (item.cell.x + k <= i) {
-                        offset = height;
-                    }
-                    height += heights[item.cell.x + k];
-                }
-                return {
-                    height: height,
-                    offset: offset
-                };
-            }
-
-            function generateCellContent(data, offset, widths, i, j) {
-                var item, width, k, entry, end;
-                var str = '';
-                item = data.arr[data.arr[i][j].cell.x][data.arr[i][j].cell.y];
-                width = calculateWidth(widths, item);
-                if (item.empty) {
-                    entry = '';
-                } else {
-                    entry = item.pseudoRows[offset] || '';
-                }
-                if ('right' == item.hAlign) {
-                    end = width - entry.length;
-                } else if ('center' == item.hAlign) {
-                    end = Math.floor((width - entry.length) / 2);
-                } else {
-                    end = 0;
-                }
-                for (k = 0; k < end; k++) {
-                    str += ' ';
-                }
-                str += escapeHTMLEntities(entry);
-                end = width - entry.length - end;
-                for (k = 0; k < end; k++) {
-                    str += ' ';
-                }
-                return str;
-            }
-
-            function calculateWidth(widths, item) {
-                var width, k;
-                width = widths[item.cell.y];
-                for (k = 1; k < item.cell.colspan; k++) {
-                    width += 1;
-                    width += widths[item.cell.y + k];
-                }
-                return width;
-            }
-
-            function hasHorizontalInnerHeader(data, border, i, horizontalHeader) {
-                return ('none' != border.horizontalInnerHeader && 'none' != horizontalHeader && i == 0 && data.vLen > 1);
-            }
-
-            function hasHorizontalInner(data, border, i) {
-                return ('none' != border.horizontalInner && i < data.vLen - 1);
-            }
-
-            function escapeHTMLEntities(text) {
-                return text.replace(/[<>\&]/g, function (c) {
-                    return '&#' + c.charCodeAt(0) + ';';
-                });
-            }
-
-            var unicode = {
-                none: {
-                    none: {
-                        double: {
-                            double: '╗'
-                        },
-                    },
-                    double: {
-                        none: {
-                            double: '═'
-                        },
-                        double: {
-                            none: '╔',
-                            double: '╦'
-                        },
-                    },
-                },
-                double: {
-                    none: {
-                        none: {
-                            double: '╝'
-                        },
-                        double: {
-                            none: '║',
-                            double: '╣'
-                        },
-                    },
-                    double: {
-                        none: {
-                            none: '╚',
-                            double: '╩'
-                        },
-                        double: {
-                            none: '╠',
-                            double: '╬'
-                        }
-                    }
-                }
-            };
-
-            var line = {
-                unicode: {
-                    double: {
-                        vertical: unicode.double.none.double.none,
-                        horizontal: unicode.none.double.none.double
-                    }
-                }
-            };
-
-            var spacePadding = true;
-            var charset = 'unicode';
-            var horizontalHeader = 'first_line';
-            var verticalHeader = 'none';
-
-            var border = {
-                horizontalTop: 'double',
-                horizontalInnerHeader: 'double',
-                horizontalInner: 'double',
-                horizontalBottom: 'double',
-                verticalLeft: 'double',
-                verticalInnerHeader: 'double',
-                verticalInner: 'double',
-                verticalRight: 'double',
-                asciiIntersection: 'plus'
-            };
-
-            var data = extractData(tableData, spacePadding, horizontalHeader, verticalHeader);
-            var widths = getWidths(data, spacePadding);
-            var heights = getHeights(data, border, horizontalHeader, spacePadding);
-            var str = "";
-            var i, j, m, offsets;
-
-            // top
-            str += generateSeparationLine(data, widths, heights, unicode, line, charset, horizontalHeader, verticalHeader, border, -1);
-
-            // rows
-            for (i = 0; i < data.vLen; i++) {
-                offsets = [];
-                for (j = 0; j < widths.length; j++) {
-                    offsets[j] = calculateOffset(data, heights, border, horizontalHeader, i, j);
-                }
-
-                for (m = 0; m < heights[i]; m++) {
-                    str += line[charset][border.verticalLeft].vertical;
-                    for (j = 0; j < widths.length; j++) {
-                        str += generateCellContent(data, offsets[j] + m, widths, i, j);
-                        j += data.arr[i][j].cell.colspan - 1;
-                        if ('none' != verticalHeader && j == 0 && data.hLen > 1) {
-                            str += line[charset][border.verticalInnerHeader].vertical;
-                        } else if (j < widths.length - 1) {
-                            str += line[charset][border.verticalInner].vertical;
-                        }
-                    }
-                    str += line[charset][border.verticalRight].vertical;
-                    str += '\n';
-                }
-
-                str += generateSeparationLine(data, widths, heights, unicode, line, charset, horizontalHeader, verticalHeader, border, i);
-            }
-            if (data.vLen == 0) {
-                str += generateSeparationLine(data, widths, heights, unicode, line, charset, horizontalHeader, verticalHeader, border, data.vLen);
-            }
-            return str.trim();
-        }
-        self.postMessage({ type: 'log', method: 'console.table', message: generateTable(DataTransformer(data)) });
+        self.postMessage({ type: 'log', method: String(() => { return console.table }), message: TableGenerator(DataTransformer(data), 'HTML'), executionID });
     };
 
     // Override console.clear to clear the console
     console.clear = () => {
-        self.postMessage({ type: 'clear', method: 'console.clear' });
-    };
-
-    // Override fetch to inject mode: 'cors'
-    const Fetch = fetch;
-    fetch = (input, init = {}) => {
-        init.mode = 'cors';
-        return Fetch(input, init);
+        self.postMessage({ type: 'clear', method: String(() => { return console.clear }), executionID });
     };
 
     try {
+        performance.mark('executionStarted'); // Mark the start of execution
+
         self.postMessage({ executionStatus: 'executionStarted' }); // Notify that execution has started
 
-        // Wrap the code in an IIFE to use setTimeout and setInterval
-        const result = (function () { eval(`(() => { ${transpiledCode} })()`) })();
+        const result = Function(code)();
 
-        // If the result is not undefined, post it back as a log message
         if (result !== undefined) {
-            self.postMessage({ type: 'log', message: result, typeOf: typeof result, method: 'globalThis.eval' });
+            self.postMessage({ type: 'log', message: result, method: String(() => { return globalThis.Function }), executionID });
         }
     } catch (error) {
-        // Determine error type and post the error message back
-        const errorType = error instanceof SyntaxError ? "Syntax Error" : "Runtime Error";
-        self.postMessage({ type: 'error', message: `${errorType}: ${error.message}` });
+        let errorMessage = `Uncaught ${error.constructor.name}: ${error.message}\n\nStack Trace: ${error.stack}`;
+        self.postMessage({ type: 'error', message: errorMessage, method: String(() => { return globalThis.Function }), executionID });
     } finally {
         performance.mark('executionEnded'); // Mark the end of execution
         performance.measure('Execution Time', 'executionStarted', 'executionEnded'); // Measure the execution time
-        self.postMessage({ executionStatus: 'executionEnded', executionTime: performance.getEntriesByName('Execution Time')[0].duration }); // Notify that execution has ended and post the execution time
+        self.postMessage({
+            executionStatus: 'executionEnded',
+            executionTime: performance.getEntriesByName('Execution Time')[0].duration
+        }); // Notify that execution has ended and post the execution time
     }
 };

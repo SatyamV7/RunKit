@@ -598,3 +598,13 @@ div.buttons>button:not(:focus) {
 div.Buttons>button:not(:active:focus) {
     box-shadow: 0 0 0 0.1rem #007bff;
 }
+
+table {
+    border: 1px solid;
+    border-collapse: collapse;
+}
+
+td {
+    border: 1px solid;
+    padding: 6px;
+}
